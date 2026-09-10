@@ -24,6 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
     export = subparsers.add_parser("export-vdr", help="Export findings as CycloneDX VDR")
     export.add_argument("--project", required=True, help="Dependency-Track project UUID")
     export.add_argument("--output", required=True, type=Path)
+    wait = subparsers.add_parser("wait-bom", help="Wait until an uploaded BOM is processed")
+    wait.add_argument("--token", required=True, help="Token returned by upload-bom")
+    wait.add_argument("--timeout", type=int, default=300, help="Maximum wait in seconds")
+    wait.add_argument("--poll", type=float, default=2.0, help="Polling interval in seconds")
     return parser
 
 
@@ -33,7 +37,7 @@ def run(args: argparse.Namespace) -> int:
         result = client.upload_bom(args.project, args.file)
     elif args.command == "apply-vex":
         result = client.apply_vex(args.project, args.file)
-    else:
+    elif args.command == "export-vdr":
         result = client.export_vdr(args.project)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         with args.output.open("w", encoding="utf-8") as stream:
@@ -43,6 +47,8 @@ def run(args: argparse.Namespace) -> int:
             "output": str(args.output.resolve()),
             "vulnerabilities": len(result.get("vulnerabilities", [])),
         }
+    else:
+        result = client.wait_for_bom(args.token, args.timeout, args.poll)
     print(json.dumps(result, ensure_ascii=False))
     return 0
 

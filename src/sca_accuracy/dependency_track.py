@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -51,6 +52,22 @@ class DependencyTrackClient:
 
     def apply_vex(self, project_uuid: str, path: Path) -> dict[str, Any]:
         return self._upload("/api/v1/vex", "vex", project_uuid, path)
+
+    def wait_for_bom(
+        self, token: str, wait_seconds: int = 300, poll_seconds: float = 2.0
+    ) -> dict[str, Any]:
+        task_token = _validated_uuid(token)
+        deadline = time.monotonic() + wait_seconds
+        while True:
+            payload = json.loads(self._request("GET", f"/api/v1/bom/token/{task_token}"))
+            processing, status = _processing_state(payload)
+            if not processing:
+                return {"token": task_token, "processing": False, "status": status}
+            if time.monotonic() >= deadline:
+                raise RuntimeError(
+                    f"Dependency-Track BOM processing timed out after {wait_seconds}s"
+                )
+            time.sleep(poll_seconds)
 
     def _upload(
         self, endpoint: str, file_field: str, project_uuid: str, path: Path
@@ -102,6 +119,22 @@ def _validated_uuid(value: str) -> str:
         return str(uuid.UUID(value))
     except ValueError as exc:
         raise ValueError(f"Invalid Dependency-Track project UUID: {value}") from exc
+
+
+def _processing_state(payload: Any) -> tuple[bool, str]:
+    if isinstance(payload, bool):
+        return payload, "processing" if payload else "completed"
+    if isinstance(payload, dict):
+        if isinstance(payload.get("processing"), bool):
+            return payload["processing"], str(payload.get("status", "processing"))
+        status = str(payload.get("status", "")).lower()
+        if status in {"completed", "complete", "succeeded", "success"}:
+            return False, status
+        if status in {"failed", "cancelled", "canceled"}:
+            raise RuntimeError(f"Dependency-Track BOM processing ended with status {status}")
+        if status:
+            return True, status
+    raise TypeError("Unexpected Dependency-Track BOM processing response")
 
 
 def _multipart(

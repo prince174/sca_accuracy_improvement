@@ -53,3 +53,20 @@ def test_export_vdr_validates_cyclonedx_response() -> None:
     assert request.full_url.endswith(
         "/api/v1/bom/cyclonedx/project/37803005-05ff-46c5-9571-9ac7857fd07d?variant=vdr"
     )
+
+
+def test_wait_for_bom_polls_until_processing_finishes() -> None:
+    client = DependencyTrackClient(DependencyTrackConfig("https://dtrack.example", "key"))
+    responses = [Response("true"), Response('{"processing":false,"status":"completed"}')]
+
+    with (
+        patch.object(urllib.request, "urlopen", side_effect=responses) as urlopen,
+        patch("sca_accuracy.dependency_track.time.sleep"),
+    ):
+        result = client.wait_for_bom(
+            "8bb712b3-bb51-42da-8e7e-af3a138c1844", wait_seconds=30, poll_seconds=0
+        )
+
+    assert result["processing"] is False
+    assert result["status"] == "completed"
+    assert urlopen.call_count == 2

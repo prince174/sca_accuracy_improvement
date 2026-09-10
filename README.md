@@ -130,6 +130,10 @@ uv run sca-accuracy-dtrack upload-bom `
   --project 37803005-05ff-46c5-9571-9ac7857fd07d `
   --file out\sbom.enriched.json
 
+uv run sca-accuracy-dtrack wait-bom `
+  --token 8bb712b3-bb51-42da-8e7e-af3a138c1844 `
+  --timeout 600
+
 uv run sca-accuracy-dtrack apply-vex `
   --project 37803005-05ff-46c5-9571-9ac7857fd07d `
   --file out\vex.json
@@ -140,6 +144,10 @@ uv run sca-accuracy-dtrack apply-vex `
 обновления в Dependency-Track 5. VEX применяется только к уже существующим
 findings, поэтому сначала загружается SBOM и завершается анализ, затем применяется
 VEX.
+
+Готовый PowerShell step для TeamCity находится в `integrations/teamcity.ps1`. Он
+выполняет полный цикл: исходный SBOM → ожидание Dependency-Track → VDR → анализ
+образа → enriched SBOM → VEX → TeamCity artifacts.
 
 ## Границы MVP
 
