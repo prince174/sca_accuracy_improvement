@@ -24,14 +24,21 @@ uv run sca-accuracy `
   --output out\golden `
   --expectations golden\expected-statuses.json `
   --findings golden\findings.vdr.json `
-  --vex-mode safe
+  --vex-mode safe `
+  --vulnerability-rules golden\vulnerability-rules.json `
+  --vex-expectations golden\expected-vex-states.json
 ```
 
 `expected-statuses.json` проверяет выбранные контрольные компоненты и завершает
 команду с ошибкой при любом отклонении. Полный результат gate записывается в
 `expectation-result.json`. Остальные транзитивные зависимости остаются в отчёте.
 
-`findings.vdr.json` содержит три синтетических INTERNAL finding: для компонента в
-образе, неожиданно отсутствующего compile-компонента и ожидаемо отсутствующей test
-dependency. Только последний получает автоматический `not_affected`; остальные
-остаются `in_triage`.
+`findings.vdr.json` содержит три синтетических INTERNAL finding. Правило для
+`GOLDEN-2026-0001` указывает точную JVM-сигнатуру `StringUtils.defaultIfBlank`,
+которую вызывает приложение, поэтому статус становится `exploitable`.
+Неожиданно отсутствующий compile-компонент остаётся `in_triage`, а отсутствующая
+test dependency получает `not_affected` с `code_not_present`.
+
+`expected-vex-states.json` превращает эти три решения в воспроизводимый gate.
+Отсутствие прямой ссылки на символ не используется для автоматического
+`not_affected`.

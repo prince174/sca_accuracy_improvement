@@ -8,6 +8,7 @@ from typing import Any, Literal
 from .findings import Finding
 from .models import ReconciliationItem
 from .sbom import iter_all_components
+from .vulnerability_rules import VulnerabilityRule
 
 VexMode = Literal["advisory", "safe"]
 
@@ -18,7 +19,9 @@ def build_vex(
     reconciliation: list[ReconciliationItem],
     image_digest: str,
     mode: VexMode = "advisory",
+    rules: dict[str, VulnerabilityRule] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    rules = rules or {}
     components_by_ref = {
         str(component["bom-ref"]): component
         for component in iter_all_components(sbom)
@@ -36,7 +39,7 @@ def build_vex(
     for finding in findings:
         source_component = components_by_ref.get(finding.affects_ref)
         item = items_by_ref.get(finding.affects_ref)
-        decision = _decision(item, image_digest, mode)
+        decision = _decision(finding, item, image_digest, mode, rules.get(finding.vulnerability_id))
         assessment = {
             "vulnerability_id": finding.vulnerability_id,
             "source": finding.source_name,
@@ -91,13 +94,34 @@ def _identity_component(component: dict[str, Any]) -> dict[str, Any]:
     return {key: copy.deepcopy(component[key]) for key in allowed if key in component}
 
 
-def _decision(item: ReconciliationItem | None, image_digest: str, mode: VexMode) -> dict[str, str]:
+def _decision(
+    finding: Finding,
+    item: ReconciliationItem | None,
+    image_digest: str,
+    mode: VexMode,
+    rule: VulnerabilityRule | None,
+) -> dict[str, str]:
     if item is None:
         return {
             "state": "in_triage",
             "detail": "No reconciliation evidence was found for this component.",
             "automation": "blocked",
         }
+    if rule and finding.component and rule.component_gav == finding.component.gav:
+        observed_symbols = {
+            symbol for observation in item.observations for symbol in observation.referenced_symbols
+        }
+        matched = sorted(observed_symbols & rule.symbols)
+        if matched:
+            return {
+                "state": "exploitable",
+                "detail": (
+                    "The application bytecode directly references a vulnerable symbol in the "
+                    f"delivered image {image_digest}: {', '.join(matched)}"
+                ),
+                "automation": "deterministic_symbol_match",
+                "matched_symbols": ",".join(matched),
+            }
     if mode == "safe" and item.status == "expected_absent" and item.maven_scope == "test":
         return {
             "state": "not_affected",

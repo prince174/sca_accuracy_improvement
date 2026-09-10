@@ -31,3 +31,20 @@ def verify_expectations(
         "checked": len(expectations),
         "mismatches": mismatches,
     }
+
+
+def verify_vex_expectations(vex: dict[str, Any], expectations: dict[str, str]) -> dict[str, Any]:
+    actual = {
+        str(vulnerability.get("id")): str(vulnerability.get("analysis", {}).get("state", "missing"))
+        for vulnerability in vex.get("vulnerabilities", [])
+    }
+    mismatches = [
+        {
+            "vulnerability_id": identifier,
+            "expected": expected,
+            "actual": actual.get(identifier, "missing"),
+        }
+        for identifier, expected in expectations.items()
+        if actual.get(identifier) != expected
+    ]
+    return {"passed": not mismatches, "checked": len(expectations), "mismatches": mismatches}

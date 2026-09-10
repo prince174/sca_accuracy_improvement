@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from .expectations import load_expectations, verify_expectations
+from .expectations import load_expectations, verify_expectations, verify_vex_expectations
 from .findings import load_findings
 from .image import inspect_image
 from .llm import LlmConfig, analyze
@@ -13,6 +13,7 @@ from .maven import load_dependency_tree
 from .report import write_outputs
 from .sbom import enrich_sbom, load_sbom, reconcile
 from .vex import build_vex
+from .vulnerability_rules import load_vulnerability_rules
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,6 +44,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="advisory",
         help="VEX policy: advisory keeps findings in triage; safe enables deterministic rules",
     )
+    parser.add_argument(
+        "--vulnerability-rules",
+        type=Path,
+        help="Local vulnerability-to-JVM-symbol rule database",
+    )
+    parser.add_argument(
+        "--vex-expectations", type=Path, help="Expected vulnerability-ID-to-VEX-state JSON"
+    )
     return parser
 
 
@@ -72,8 +81,11 @@ def run(args: argparse.Namespace) -> int:
     write_outputs(args.output, args.image, digest, observations, items, enriched, llm_analysis)
     vex_result = None
     if findings:
+        rules = (
+            load_vulnerability_rules(args.vulnerability_rules) if args.vulnerability_rules else {}
+        )
         vex, vulnerability_assessments = build_vex(
-            sbom, findings, items, digest, mode=args.vex_mode
+            sbom, findings, items, digest, mode=args.vex_mode, rules=rules
         )
         vex_result = {
             "findings": len(findings),
@@ -90,6 +102,14 @@ def run(args: argparse.Namespace) -> int:
             with (args.output / filename).open("w", encoding="utf-8") as stream:
                 json.dump(document, stream, ensure_ascii=False, indent=2)
                 stream.write("\n")
+        if args.vex_expectations:
+            vex_expectation_result = verify_vex_expectations(
+                vex, load_expectations(args.vex_expectations)
+            )
+            vex_result["expectations"] = vex_expectation_result
+            if not vex_expectation_result["passed"]:
+                mismatches = json.dumps(vex_expectation_result["mismatches"], ensure_ascii=False)
+                raise RuntimeError(f"VEX expectations failed: {mismatches}")
     expectation_result = None
     if args.expectations:
         expectation_result = verify_expectations(items, load_expectations(args.expectations))

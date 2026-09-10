@@ -13,6 +13,7 @@
 - сопоставить наблюдения с компонентами CycloneDX по точным Maven coordinates;
 - сформировать `inventory.json`, `assessment.json` и `sbom.enriched.json`;
 - принять CycloneDX VDR/BOM с findings и сформировать валидный CycloneDX VEX;
+- сопоставить finding с точной JVM-сигнатурой из проверяемой базы правил;
 - опционально передать только структурированные расхождения в DeepSeek для объяснения.
 
 LLM не читает бинарный образ и не принимает решения о подавлении уязвимостей. Она
@@ -63,11 +64,22 @@ uv run sca-accuracy `
 - `vulnerability-assessment.json` — решения policy gate и основания автоматизации.
 - `vex.json` — CycloneDX VEX для применения решений к существующим findings.
 
-`--vex-mode advisory` оставляет все findings в `in_triage`. Режим `safe` сейчас
-автоматизирует только один консервативный случай: Maven test dependency отсутствует
-в поставляемом образе. Он получает `not_affected` с `code_not_present`. Для
-compile/runtime, version conflict и подтверждённых компонентов VEX остаётся
-`in_triage` до появления данных о достижимости конкретной уязвимой функции.
+`--vex-mode advisory` оставляет все findings в `in_triage`. Режим `safe`
+автоматически ставит `not_affected` отсутствующей Maven test dependency и
+`exploitable`, когда приложение содержит точную bytecode-ссылку на JVM-сигнатуру,
+заданную для finding в `--vulnerability-rules`. Для остальных случаев VEX остаётся
+`in_triage`.
+
+```powershell
+uv run sca-accuracy `
+  --sbom golden\app\target\bom.json `
+  --image sca-accuracy-golden:latest `
+  --output out\golden `
+  --findings golden\findings.vdr.json `
+  --vex-mode safe `
+  --vulnerability-rules golden\vulnerability-rules.json `
+  --vex-expectations golden\expected-vex-states.json
+```
 
 ## Dependency-Track
 
@@ -99,8 +111,8 @@ VEX.
 
 ## Границы MVP
 
-Прототип подтверждает состав Java-приложения, но пока не строит call graph и не
-исследует конфигурацию production. Автоматический `NOT_AFFECTED` ограничен
+Прототип подтверждает состав Java-приложения, но пока не строит полный call graph
+и не исследует конфигурацию production. Автоматический `NOT_AFFECTED` ограничен
 отсутствующими test dependencies.
 
 `bytecode_referenced` означает, что класс приложения содержит прямую JVM-ссылку
@@ -110,6 +122,6 @@ VEX.
 Filename fallback имеет низкую уверенность и не считается точным доказательством.
 Системные пакеты базового образа пока не анализируются.
 
-Следующий вертикальный срез: импорт findings Dependency-Track, база условий CVE,
-статический call graph Java и генерация CycloneDX VEX с машинно проверяемыми
-основаниями.
+Формат базы правил показан в `golden/vulnerability-rules.json`. Каждое правило
+связывает идентификатор уязвимости, Maven GAV и одну или несколько полных JVM
+сигнатур. Источник и версия такой базы должны контролироваться отдельно от модели.
