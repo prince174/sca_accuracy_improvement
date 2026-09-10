@@ -10,6 +10,7 @@ import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
 
+from .bytecode import class_names_from_jar_entries, method_references, symbol_owner
 from .models import ComponentIdentity, Observation
 
 _JAR_NAME = re.compile(r"^(?P<name>.+)-(?P<version>[0-9][A-Za-z0-9_.+\-]*)\.jar$")
@@ -70,6 +71,11 @@ def _inspect_jar(data: bytes, location: str, source: str) -> list[Observation]:
     digest = hashlib.sha256(data).hexdigest()
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as jar:
+            application_references: set[str] = set()
+            for class_name in jar.namelist():
+                if not _is_application_class(class_name):
+                    continue
+                application_references.update(method_references(jar.read(class_name)))
             identities = _pom_properties(jar)
             for identity in identities:
                 observations.append(Observation(identity, location, source, digest, 1.0))
@@ -78,6 +84,14 @@ def _inspect_jar(data: bytes, location: str, source: str) -> list[Observation]:
                     nested_data = jar.read(member)
                     nested_location = f"{location}!/{member}"
                     nested = _inspect_jar(nested_data, nested_location, "nested-jar-metadata")
+                    nested_classes = _classes_in_jar(nested_data)
+                    references = sorted(
+                        symbol
+                        for symbol in application_references
+                        if symbol_owner(symbol) in nested_classes
+                    )[:500]
+                    for observation in nested:
+                        observation.referenced_symbols = references
                     if nested:
                         observations.extend(nested)
                     else:
@@ -95,6 +109,22 @@ def _inspect_jar(data: bytes, location: str, source: str) -> list[Observation]:
     except (zipfile.BadZipFile, KeyError, RuntimeError):
         return observations
     return observations
+
+
+def _is_application_class(name: str) -> bool:
+    if name.startswith(("BOOT-INF/classes/", "WEB-INF/classes/")):
+        return name.endswith(".class")
+    return name.endswith(".class") and not name.startswith(
+        ("META-INF/", "BOOT-INF/", "WEB-INF/", "org/springframework/boot/loader/")
+    )
+
+
+def _classes_in_jar(data: bytes) -> set[str]:
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as jar:
+            return class_names_from_jar_entries(jar.namelist())
+    except zipfile.BadZipFile:
+        return set()
 
 
 def identity_from_filename(filename: str) -> ComponentIdentity | None:

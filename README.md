@@ -9,6 +9,7 @@
 - безопасно создать, но не запускать контейнер, и экспортировать его rootfs;
 - найти JAR/WAR и вложенные библиотеки Spring Boot (`BOOT-INF/lib`) и WAR (`WEB-INF/lib`);
 - извлечь Maven coordinates из `META-INF/maven/**/pom.properties` и вычислить SHA-256;
+- извлечь ссылки на методы библиотек из JVM constant pool классов приложения;
 - сопоставить наблюдения с компонентами CycloneDX по точным Maven coordinates;
 - сформировать `inventory.json`, `assessment.json` и `sbom.enriched.json`;
 - принять CycloneDX VDR/BOM с findings и сформировать валидный CycloneDX VEX;
@@ -53,7 +54,7 @@ uv run sca-accuracy `
 ## Выходные данные
 
 - `inventory.json` — все наблюдённые компоненты, их расположение, источник
-  идентификации, хеш и уверенность метода.
+  идентификации, хеш, уверенность метода и наблюдённые bytecode symbols.
 - `assessment.json` — `confirmed`, `sbom_only`, `observed_only` и
   `version_conflict`, плюс консультативный вывод модели.
 - `sbom.enriched.json` — исходный BOM с digest образа, статусами сопоставления и
@@ -101,6 +102,11 @@ VEX.
 Прототип подтверждает состав Java-приложения, но пока не строит call graph и не
 исследует конфигурацию production. Автоматический `NOT_AFFECTED` ограничен
 отсутствующими test dependencies.
+
+`bytecode_referenced` означает, что класс приложения содержит прямую JVM-ссылку
+на метод компонента. `present_no_reference_observed` означает только отсутствие
+такой прямой ссылки; это не доказательство недостижимости из-за транзитивных
+вызовов, reflection, dependency injection и динамической загрузки.
 Filename fallback имеет низкую уверенность и не считается точным доказательством.
 Системные пакеты базового образа пока не анализируются.
 

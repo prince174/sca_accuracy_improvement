@@ -81,6 +81,7 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
             f'<td><span class="badge {escape(item["status"])}">{escape(item["status"])}</span></td>'
             f"<td><code>{escape(identity['gav'])}</code></td>"
             f"<td>{locations}</td>"
+            f"<td>{escape(item['usage_status'])}</td>"
             f"<td>{escape(item['explanation'])}</td>"
             "</tr>"
         )
@@ -119,7 +120,7 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
   <div class="meta">Image: {escape(assessment["image"])}<br>Digest: {escape(assessment["digest"])}<br>Generated: {escape(assessment["generated_at"])}</div>
   <div class="cards">{cards}</div>
   <h2>Component reconciliation</h2>
-  <table><thead><tr><th>Status</th><th>Component</th><th>Observed at</th><th>Explanation</th></tr></thead>
+  <table><thead><tr><th>Status</th><th>Component</th><th>Observed at</th><th>Usage</th><th>Explanation</th></tr></thead>
   <tbody>{"".join(rows)}</tbody></table>
   {llm_section}
 </main></body></html>
