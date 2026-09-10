@@ -68,6 +68,34 @@ uv run sca-accuracy `
 compile/runtime, version conflict и подтверждённых компонентов VEX остаётся
 `in_triage` до появления данных о достижимости конкретной уязвимой функции.
 
+## Dependency-Track
+
+Отдельный CLI обменивается документами с существующим проектом Dependency-Track.
+Ключ читается из окружения и не попадает в аргументы процесса или отчёты.
+
+```powershell
+$env:DEPENDENCY_TRACK_URL = "https://dependency-track.example"
+$env:DEPENDENCY_TRACK_API_KEY = "..."
+
+uv run sca-accuracy-dtrack export-vdr `
+  --project 37803005-05ff-46c5-9571-9ac7857fd07d `
+  --output out\findings.vdr.json
+
+uv run sca-accuracy-dtrack upload-bom `
+  --project 37803005-05ff-46c5-9571-9ac7857fd07d `
+  --file out\sbom.enriched.json
+
+uv run sca-accuracy-dtrack apply-vex `
+  --project 37803005-05ff-46c5-9571-9ac7857fd07d `
+  --file out\vex.json
+```
+
+Для экспорта нужны права чтения портфеля и уязвимостей. Загрузка SBOM требует
+`BOM_UPLOAD`, применение VEX — `VULNERABILITY_ANALYSIS` либо соответствующее право
+обновления в Dependency-Track 5. VEX применяется только к уже существующим
+findings, поэтому сначала загружается SBOM и завершается анализ, затем применяется
+VEX.
+
 ## Границы MVP
 
 Прототип подтверждает состав Java-приложения, но пока не строит call graph и не

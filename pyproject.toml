@@ -17,6 +17,7 @@ dev = ["pytest>=8.0", "ruff>=0.9"]
 
 [project.scripts]
 sca-accuracy = "sca_accuracy.cli:main"
+sca-accuracy-dtrack = "sca_accuracy.dtrack_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sca_accuracy"]
@@ -27,4 +28,3 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-
