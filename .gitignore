@@ -6,4 +6,5 @@ __pycache__/
 out/
 dist/
 *.egg-info/
+**/target/
 *.tar

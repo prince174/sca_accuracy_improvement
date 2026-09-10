@@ -1,0 +1,10 @@
+{
+  "com.example:golden-app:1.0.0": "confirmed_present",
+  "org.apache.commons:commons-lang3:3.14.0": "confirmed_present",
+  "commons-codec:commons-codec:1.17.0": "unexpected_absent",
+  "jakarta.servlet:jakarta.servlet-api:6.0.0": "expected_absent",
+  "org.junit.jupiter:junit-jupiter-api:5.10.3": "expected_absent",
+  "org.slf4j:slf4j-api:2.0.13": "version_conflict",
+  "jakarta.activation:jakarta.activation-api:2.1.3": "observed_not_declared"
+}
+
