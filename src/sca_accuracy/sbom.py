@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import unquote
 
 from .models import ComponentIdentity, Observation, ReconciliationItem
+from .version import __version__
 
 NON_RUNTIME_SCOPES = {"test", "provided", "system", "import"}
 
@@ -147,7 +148,7 @@ def enrich_sbom(
         [
             {"name": "sca-accuracy:image", "value": image},
             {"name": "sca-accuracy:image-digest", "value": digest},
-            {"name": "sca-accuracy:analyzer-version", "value": "0.1.0"},
+            {"name": "sca-accuracy:analyzer-version", "value": __version__},
         ]
     )
     by_ref = {item.bom_ref: item for item in items if item.bom_ref}

@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .pipeline import AnalysisConfig, run_analysis
+from .version import __version__
 
 ARTIFACTS = {
     "assessment.json",
@@ -118,7 +119,7 @@ def create_app(workspace: Path | None = None) -> FastAPI:
     root = workspace or Path(os.getenv("SCA_WORKSPACE", "workspace"))
     manager = JobManager(root, int(os.getenv("SCA_WORKERS", "2")))
     api_token = os.getenv("SCA_API_TOKEN", "")
-    app = FastAPI(title="SCA Accuracy Improvement", version="0.2.0")
+    app = FastAPI(title="SCA Accuracy Improvement", version=__version__)
 
     def authorize(authorization: Annotated[str | None, Header()] = None) -> None:
         if api_token and authorization != f"Bearer {api_token}":

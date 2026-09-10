@@ -1,5 +1,6 @@
 from sca_accuracy.models import ComponentIdentity, Observation
 from sca_accuracy.sbom import enrich_sbom, reconcile
+from sca_accuracy.version import __version__
 
 
 def component(group: str, name: str, version: str, ref: str) -> dict:
@@ -67,4 +68,5 @@ def test_enrich_sbom_adds_digest_status_and_occurrence() -> None:
 
     properties = {item["name"]: item["value"] for item in enriched["metadata"]["properties"]}
     assert properties["sca-accuracy:image-digest"] == "sha256:abc"
+    assert properties["sca-accuracy:analyzer-version"] == __version__
     assert enriched["components"][0]["evidence"]["occurrences"] == [{"location": "/app/lib.jar"}]
