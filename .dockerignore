@@ -1,0 +1,8 @@
+.git
+.github
+.venv
+dist
+out
+workspace
+**/__pycache__
+**/target

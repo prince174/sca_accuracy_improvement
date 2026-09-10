@@ -22,6 +22,36 @@ LLM не читает бинарный образ и не принимает р�
 формирует гипотезы и список недостающих доказательств. Такой интерфейс позже можно
 переключить на локальную модель без изменения анализаторов.
 
+## On-prem сервис
+
+HTTP API запускает анализы в ограниченной очереди. Входные файлы читаются только
+из каталога `SCA_WORKSPACE`, результаты сохраняются в `results/<job-id>`. Образ
+контейнера не запускается: сервис создаёт остановленный контейнер и экспортирует
+его файловую систему через Docker API/CLI.
+
+```powershell
+New-Item -ItemType Directory -Force workspace | Out-Null
+Copy-Item G:\path\to\bom.json workspace\bom.json
+$env:SCA_API_TOKEN = "replace-with-a-secret"
+docker compose up --build -d
+
+$headers = @{ Authorization = "Bearer $env:SCA_API_TOKEN" }
+$body = @{
+  sbom_path = "bom.json"
+  image = "image:latest"
+  vex_mode = "safe"
+} | ConvertTo-Json
+$job = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/v1/analyses `
+  -Headers $headers -ContentType application/json -Body $body
+Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/analyses/$($job.id)" -Headers $headers
+```
+
+Доступны `GET /health`, защищённый `GET /ready`, создание задания через
+`POST /v1/analyses`, чтение состояния и скачивание разрешённых артефактов. Для
+анализа локальных образов compose монтирует Docker socket. В Linux доступ к этому
+socket равнозначен административному доступу к Docker host, поэтому сервис следует
+размещать в отдельном доверенном контуре и защищать `SCA_API_TOKEN`.
+
 ## Быстрый запуск
 
 Нужны Python 3.11+, `uv` и Docker с локально доступным образом.

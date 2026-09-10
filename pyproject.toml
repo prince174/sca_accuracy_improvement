@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sca-accuracy-improvement"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-driven reconciliation of CycloneDX SBOMs with Java container images"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,11 +13,13 @@ authors = [{ name = "SCA Accuracy Improvement contributors" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.9"]
+dev = ["fastapi>=0.115", "httpx>=0.28", "pytest>=8.0", "ruff>=0.9"]
+service = ["fastapi>=0.115", "uvicorn>=0.34"]
 
 [project.scripts]
 sca-accuracy = "sca_accuracy.cli:main"
 sca-accuracy-dtrack = "sca_accuracy.dtrack_cli:main"
+sca-accuracy-service = "sca_accuracy.service:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sca_accuracy"]

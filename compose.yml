@@ -1,0 +1,15 @@
+services:
+  sca-accuracy:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SCA_API_TOKEN: ${SCA_API_TOKEN:-}
+      SCA_WORKERS: ${SCA_WORKERS:-2}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      SCA_LLM_BASE_URL: ${SCA_LLM_BASE_URL:-https://api.deepseek.com/v1}
+      SCA_LLM_MODEL: ${SCA_LLM_MODEL:-deepseek-v4-flash}
+    volumes:
+      - ./workspace:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
