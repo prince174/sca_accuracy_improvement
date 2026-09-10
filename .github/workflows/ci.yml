@@ -11,11 +11,11 @@ jobs:
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9
         with:
           enable-cache: true
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - run: uv sync --locked --extra dev
@@ -27,11 +27,11 @@ jobs:
   golden:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9
         with:
           enable-cache: true
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - run: uv sync --locked --extra dev
@@ -64,7 +64,7 @@ jobs:
             --mount "type=bind,source=$PWD/out/golden,target=/data" \
             cyclonedx/cyclonedx-cli:0.33.1 validate \
             --input-file /data/vex.json --fail-on-errors
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: golden-analysis
@@ -73,7 +73,7 @@ jobs:
   service:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build --tag sca-accuracy-service:ci .
       - name: Start service and wait for healthcheck
         run: |
