@@ -84,6 +84,10 @@ uv run sca-accuracy `
   --with-llm
 ```
 
+Для OpenAI-compatible локальной модели укажите loopback URL и имя модели. Ключ для
+`localhost`, `127.0.0.1` и `::1` необязателен; для любого удалённого endpoint нужен
+`SCA_LLM_API_KEY` или `DEEPSEEK_API_KEY`.
+
 ## Выходные данные
 
 - `inventory.json` — все наблюдённые компоненты, их расположение, источник

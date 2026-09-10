@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
@@ -23,12 +24,14 @@ class LlmConfig:
 
     @classmethod
     def from_environment(cls) -> LlmConfig:
-        key = os.getenv("DEEPSEEK_API_KEY", "")
-        if not key:
-            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+        base_url = os.getenv("SCA_LLM_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+        key = os.getenv("SCA_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY", "")
+        hostname = urllib.parse.urlparse(base_url).hostname
+        if not key and hostname not in {"localhost", "127.0.0.1", "::1"}:
+            raise RuntimeError("SCA_LLM_API_KEY or DEEPSEEK_API_KEY is not configured")
         return cls(
             api_key=key,
-            base_url=os.getenv("SCA_LLM_BASE_URL", "https://api.deepseek.com/v1").rstrip("/"),
+            base_url=base_url,
             model=os.getenv("SCA_LLM_MODEL", "deepseek-v4-flash"),
             timeout_seconds=int(os.getenv("SCA_LLM_TIMEOUT_SECONDS", "120")),
         )
@@ -59,10 +62,13 @@ def analyze(payload: dict[str, Any], config: LlmConfig) -> dict[str, Any]:
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
     }
+    headers = {"Content-Type": "application/json"}
+    if config.api_key:
+        headers["Authorization"] = f"Bearer {config.api_key}"
     request = urllib.request.Request(
         f"{config.base_url}/chat/completions",
         data=json.dumps(request_body).encode("utf-8"),
-        headers={"Authorization": f"Bearer {config.api_key}", "Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     try:
@@ -71,5 +77,7 @@ def analyze(payload: dict[str, Any], config: LlmConfig) -> dict[str, Any]:
     except urllib.error.HTTPError as exc:
         detail = exc.read(2048).decode("utf-8", errors="replace")
         raise RuntimeError(f"LLM API returned HTTP {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"LLM API request failed: {exc.reason}") from exc
     content = envelope["choices"][0]["message"]["content"]
     return _extract_json(content)
