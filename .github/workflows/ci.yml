@@ -69,3 +69,27 @@ jobs:
         with:
           name: golden-analysis
           path: out/golden/
+
+  service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag sca-accuracy-service:ci .
+      - name: Start service and wait for healthcheck
+        run: |
+          docker run --detach --name sca-accuracy-service-ci sca-accuracy-service:ci
+          for attempt in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' sca-accuracy-service-ci)
+            if [ "$status" = "healthy" ]; then
+              exit 0
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              docker logs sca-accuracy-service-ci
+              exit 1
+            fi
+            sleep 1
+          done
+          docker logs sca-accuracy-service-ci
+          exit 1
+      - if: always()
+        run: docker rm --force sca-accuracy-service-ci || true
