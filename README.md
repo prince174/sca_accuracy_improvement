@@ -11,6 +11,7 @@
 - извлечь Maven coordinates из `META-INF/maven/**/pom.properties` и вычислить SHA-256;
 - сопоставить наблюдения с компонентами CycloneDX по точным Maven coordinates;
 - сформировать `inventory.json`, `assessment.json` и `sbom.enriched.json`;
+- принять CycloneDX VDR/BOM с findings и сформировать валидный CycloneDX VEX;
 - опционально передать только структурированные расхождения в DeepSeek для объяснения.
 
 LLM не читает бинарный образ и не принимает решения о подавлении уязвимостей. Она
@@ -27,7 +28,8 @@ uv sync --extra dev
 uv run sca-accuracy `
   --sbom G:\path\to\bom.json `
   --image image:latest `
-  --output out
+  --output out `
+  --dependency-tree G:\path\to\dependency-tree.json
 ```
 
 Для анализа расхождений через DeepSeek задайте переменные окружения. Значения по
@@ -43,6 +45,8 @@ uv run sca-accuracy `
   --sbom G:\path\to\bom.json `
   --image image:latest `
   --output out `
+  --findings G:\path\to\findings.vdr.json `
+  --vex-mode safe `
   --with-llm
 ```
 
@@ -55,11 +59,20 @@ uv run sca-accuracy `
 - `sbom.enriched.json` — исходный BOM с digest образа, статусами сопоставления и
   CycloneDX evidence occurrences. Компоненты не удаляются автоматически.
 - `report.html` — автономный человекочитаемый отчёт без внешних ресурсов.
+- `vulnerability-assessment.json` — решения policy gate и основания автоматизации.
+- `vex.json` — CycloneDX VEX для применения решений к существующим findings.
+
+`--vex-mode advisory` оставляет все findings в `in_triage`. Режим `safe` сейчас
+автоматизирует только один консервативный случай: Maven test dependency отсутствует
+в поставляемом образе. Он получает `not_affected` с `code_not_present`. Для
+compile/runtime, version conflict и подтверждённых компонентов VEX остаётся
+`in_triage` до появления данных о достижимости конкретной уязвимой функции.
 
 ## Границы MVP
 
-Прототип подтверждает состав Java-приложения, но пока не строит call graph, не
-исследует конфигурацию production и не выпускает автоматические `NOT_AFFECTED`.
+Прототип подтверждает состав Java-приложения, но пока не строит call graph и не
+исследует конфигурацию production. Автоматический `NOT_AFFECTED` ограничен
+отсутствующими test dependencies.
 Filename fallback имеет низкую уверенность и не считается точным доказательством.
 Системные пакеты базового образа пока не анализируются.
 

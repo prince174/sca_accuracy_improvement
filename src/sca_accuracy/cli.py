@@ -6,11 +6,13 @@ import sys
 from pathlib import Path
 
 from .expectations import load_expectations, verify_expectations
+from .findings import load_findings
 from .image import inspect_image
 from .llm import LlmConfig, analyze
 from .maven import load_dependency_tree
 from .report import write_outputs
 from .sbom import enrich_sbom, load_sbom, reconcile
+from .vex import build_vex
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,6 +34,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--with-llm", action="store_true", help="Ask the configured LLM to explain discrepancies"
     )
+    parser.add_argument(
+        "--findings", type=Path, help="CycloneDX VDR/BOM containing vulnerability findings"
+    )
+    parser.add_argument(
+        "--vex-mode",
+        choices=("advisory", "safe"),
+        default="advisory",
+        help="VEX policy: advisory keeps findings in triage; safe enables deterministic rules",
+    )
     return parser
 
 
@@ -46,13 +57,39 @@ def run(args: argparse.Namespace) -> int:
         for item in items
         if item.status not in {"confirmed_present", "expected_absent"}
     ]
+    findings = load_findings(args.findings) if args.findings else []
     llm_analysis = None
-    if args.with_llm and discrepancies:
+    if args.with_llm and (discrepancies or findings):
         llm_analysis = analyze(
-            {"image": args.image, "digest": digest, "discrepancies": discrepancies},
+            {
+                "image": args.image,
+                "digest": digest,
+                "discrepancies": discrepancies,
+                "findings": [finding.to_dict() for finding in findings],
+            },
             LlmConfig.from_environment(),
         )
     write_outputs(args.output, args.image, digest, observations, items, enriched, llm_analysis)
+    vex_result = None
+    if findings:
+        vex, vulnerability_assessments = build_vex(
+            sbom, findings, items, digest, mode=args.vex_mode
+        )
+        vex_result = {
+            "findings": len(findings),
+            "vex_entries": len(vex["vulnerabilities"]),
+            "mode": args.vex_mode,
+        }
+        for filename, document in (
+            ("vex.json", vex),
+            (
+                "vulnerability-assessment.json",
+                {"mode": args.vex_mode, "assessments": vulnerability_assessments},
+            ),
+        ):
+            with (args.output / filename).open("w", encoding="utf-8") as stream:
+                json.dump(document, stream, ensure_ascii=False, indent=2)
+                stream.write("\n")
     expectation_result = None
     if args.expectations:
         expectation_result = verify_expectations(items, load_expectations(args.expectations))
@@ -70,6 +107,7 @@ def run(args: argparse.Namespace) -> int:
                 "components_observed": len(observations),
                 "discrepancies": len(discrepancies),
                 "expectations": expectation_result,
+                "vex": vex_result,
             },
             ensure_ascii=False,
         )
@@ -80,7 +118,7 @@ def run(args: argparse.Namespace) -> int:
 def main() -> None:
     try:
         raise SystemExit(run(build_parser().parse_args()))
-    except (OSError, RuntimeError, ValueError) as exc:
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
 

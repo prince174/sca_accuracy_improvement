@@ -1,0 +1,63 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:78013a79-d472-4cd7-9755-9302b8a727b2",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "bom-ref": "pkg:maven/com.example/golden-app@1.0.0?type=jar",
+      "type": "application",
+      "group": "com.example",
+      "name": "golden-app",
+      "version": "1.0.0",
+      "purl": "pkg:maven/com.example/golden-app@1.0.0?type=jar"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar",
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-lang3",
+      "version": "3.14.0",
+      "purl": "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar"
+    },
+    {
+      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.17.0?type=jar",
+      "type": "library",
+      "group": "commons-codec",
+      "name": "commons-codec",
+      "version": "1.17.0",
+      "purl": "pkg:maven/commons-codec/commons-codec@1.17.0?type=jar"
+    },
+    {
+      "bom-ref": "pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.3?type=jar",
+      "type": "library",
+      "group": "org.junit.jupiter",
+      "name": "junit-jupiter-api",
+      "version": "5.10.3",
+      "purl": "pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.3?type=jar"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "GOLDEN-2026-0001",
+      "source": {"name": "INTERNAL"},
+      "description": "Synthetic finding on a component present in the runtime image.",
+      "affects": [{"ref": "pkg:maven/org.apache.commons/commons-lang3@3.14.0?type=jar"}]
+    },
+    {
+      "id": "GOLDEN-2026-0002",
+      "source": {"name": "INTERNAL"},
+      "description": "Synthetic finding on a compile dependency deliberately excluded from packaging.",
+      "affects": [{"ref": "pkg:maven/commons-codec/commons-codec@1.17.0?type=jar"}]
+    },
+    {
+      "id": "GOLDEN-2026-0003",
+      "source": {"name": "INTERNAL"},
+      "description": "Synthetic finding on a test-only dependency absent from the runtime image.",
+      "affects": [{"ref": "pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.3?type=jar"}]
+    }
+  ]
+}
+

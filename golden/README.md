@@ -22,10 +22,16 @@ uv run sca-accuracy `
   --dependency-tree golden\app\target\dependency-tree.json `
   --image sca-accuracy-golden:latest `
   --output out\golden `
-  --expectations golden\expected-statuses.json
+  --expectations golden\expected-statuses.json `
+  --findings golden\findings.vdr.json `
+  --vex-mode safe
 ```
 
 `expected-statuses.json` проверяет выбранные контрольные компоненты и завершает
 команду с ошибкой при любом отклонении. Полный результат gate записывается в
 `expectation-result.json`. Остальные транзитивные зависимости остаются в отчёте.
 
+`findings.vdr.json` содержит три синтетических INTERNAL finding: для компонента в
+образе, неожиданно отсутствующего compile-компонента и ожидаемо отсутствующей test
+dependency. Только последний получает автоматический `not_affected`; остальные
+остаются `in_triage`.
