@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import os
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -42,6 +44,8 @@ class Job:
     status: Literal["queued", "running", "succeeded", "failed"] = "queued"
     result: dict[str, object] | None = None
     error: str | None = None
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class JobManager:
@@ -52,6 +56,7 @@ class JobManager:
         self._jobs: dict[str, Job] = {}
         self._lock = threading.Lock()
         self._executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="analysis")
+        self._restore()
 
     def submit(self, request: AnalysisRequest) -> Job:
         job = Job(str(uuid.uuid4()))
@@ -67,6 +72,7 @@ class JobManager:
         )
         with self._lock:
             self._jobs[job.id] = job
+            self._save(job)
         self._executor.submit(self._execute, job.id, config)
         return job
 
@@ -113,6 +119,32 @@ class JobManager:
             job = self._jobs[job_id]
             for key, value in values.items():
                 setattr(job, key, value)
+            job.updated_at = datetime.now(UTC).isoformat()
+            self._save(job)
+
+    def _restore(self) -> None:
+        for path in self.results.glob("*/job.json"):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                job = Job(**data)
+            except (OSError, TypeError, ValueError):
+                continue
+            if job.status in {"queued", "running"}:
+                job.status = "failed"
+                job.error = "Service restarted before the analysis completed."
+                job.updated_at = datetime.now(UTC).isoformat()
+                self._save(job)
+            self._jobs[job.id] = job
+
+    def _save(self, job: Job) -> None:
+        directory = self.results / job.id
+        directory.mkdir(parents=True, exist_ok=True)
+        target = directory / "job.json"
+        temporary = directory / ".job.json.tmp"
+        temporary.write_text(
+            json.dumps(asdict(job), ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        temporary.replace(target)
 
 
 def create_app(workspace: Path | None = None) -> FastAPI:
