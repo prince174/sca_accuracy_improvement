@@ -1,5 +1,7 @@
 # SCA Accuracy Improvement
 
+[![CI](https://github.com/prince174/sca_accuracy_improvement/actions/workflows/ci.yml/badge.svg)](https://github.com/prince174/sca_accuracy_improvement/actions/workflows/ci.yml)
+
 Прототип сопоставляет CycloneDX SBOM Maven-проекта с Java-компонентами, которые
 фактически попали в контейнерный образ. Результат привязан к digest образа, даже
 если входом был изменяемый тег вроде `image:latest`.

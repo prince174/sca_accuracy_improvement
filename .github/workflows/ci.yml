@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --extra dev
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+      - run: uv build
+
+  golden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --extra dev
+      - name: Build golden Maven artifacts
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$PWD/golden,target=/workspace" \
+            --mount "type=volume,source=sca-accuracy-m2,target=/root/.m2" \
+            -w /workspace/app maven:3.9.11-eclipse-temurin-21 mvn -B clean package
+          docker run --rm \
+            --mount "type=bind,source=$PWD/golden,target=/workspace" \
+            --mount "type=volume,source=sca-accuracy-m2,target=/root/.m2" \
+            -w /workspace/image-libs maven:3.9.11-eclipse-temurin-21 mvn -B clean package
+          docker build --tag sca-accuracy-golden:latest golden
+      - name: Reconcile image and enforce golden decisions
+        run: |
+          uv run sca-accuracy \
+            --sbom golden/app/target/bom.json \
+            --dependency-tree golden/app/target/dependency-tree.json \
+            --image sca-accuracy-golden:latest \
+            --output out/golden \
+            --expectations golden/expected-statuses.json \
+            --findings golden/findings.vdr.json \
+            --vex-mode safe \
+            --vulnerability-rules golden/vulnerability-rules.json \
+            --vex-expectations golden/expected-vex-states.json
+      - name: Validate CycloneDX VEX
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$PWD/out/golden,target=/data" \
+            cyclonedx/cyclonedx-cli:0.33.1 validate \
+            --input-file /data/vex.json --fail-on-errors
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: golden-analysis
+          path: out/golden/
