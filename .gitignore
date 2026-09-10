@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+out/
+dist/
+*.egg-info/
+*.tar

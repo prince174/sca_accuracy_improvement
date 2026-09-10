@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sca-accuracy-improvement"
+version = "0.1.0"
+description = "Evidence-driven reconciliation of CycloneDX SBOMs with Java container images"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "SCA Accuracy Improvement contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.9"]
+
+[project.scripts]
+sca-accuracy = "sca_accuracy.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sca_accuracy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+

@@ -1,0 +1,39 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-4000-8000-000000000002",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "bom-ref": "pkg:maven/com.example/demo-application@1.0.0",
+      "type": "application",
+      "group": "com.example",
+      "name": "demo-application",
+      "version": "1.0.0",
+      "purl": "pkg:maven/com.example/demo-application@1.0.0"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:maven/com.example/definitely-absent-library@9.9.9",
+      "type": "library",
+      "group": "com.example",
+      "name": "definitely-absent-library",
+      "version": "9.9.9",
+      "purl": "pkg:maven/com.example/definitely-absent-library@9.9.9",
+      "scope": "required"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:maven/com.example/demo-application@1.0.0",
+      "dependsOn": [
+        "pkg:maven/com.example/definitely-absent-library@9.9.9"
+      ]
+    },
+    {
+      "ref": "pkg:maven/com.example/definitely-absent-library@9.9.9",
+      "dependsOn": []
+    }
+  ]
+}
