@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .expectations import load_expectations, verify_expectations
 from .image import inspect_image
 from .llm import LlmConfig, analyze
 from .maven import load_dependency_tree
@@ -24,6 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", type=Path, default=Path("out"), help="Output directory")
     parser.add_argument(
         "--dependency-tree", type=Path, help="Maven dependency:tree JSON with resolved scopes"
+    )
+    parser.add_argument(
+        "--expectations", type=Path, help="Expected GAV-to-status JSON; fail on any mismatch"
     )
     parser.add_argument(
         "--with-llm", action="store_true", help="Ask the configured LLM to explain discrepancies"
@@ -49,6 +53,15 @@ def run(args: argparse.Namespace) -> int:
             LlmConfig.from_environment(),
         )
     write_outputs(args.output, args.image, digest, observations, items, enriched, llm_analysis)
+    expectation_result = None
+    if args.expectations:
+        expectation_result = verify_expectations(items, load_expectations(args.expectations))
+        with (args.output / "expectation-result.json").open("w", encoding="utf-8") as stream:
+            json.dump(expectation_result, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+        if not expectation_result["passed"]:
+            mismatches = json.dumps(expectation_result["mismatches"], ensure_ascii=False)
+            raise RuntimeError(f"Reconciliation expectations failed: {mismatches}")
     print(
         json.dumps(
             {
@@ -56,6 +69,7 @@ def run(args: argparse.Namespace) -> int:
                 "image_digest": digest,
                 "components_observed": len(observations),
                 "discrepancies": len(discrepancies),
+                "expectations": expectation_result,
             },
             ensure_ascii=False,
         )

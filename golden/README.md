@@ -21,9 +21,11 @@ uv run sca-accuracy `
   --sbom golden\app\target\bom.json `
   --dependency-tree golden\app\target\dependency-tree.json `
   --image sca-accuracy-golden:latest `
-  --output out\golden
+  --output out\golden `
+  --expectations golden\expected-statuses.json
 ```
 
-`expected-statuses.json` проверяет выбранные контрольные компоненты. Остальные
-транзитивные зависимости также остаются в отчёте.
+`expected-statuses.json` проверяет выбранные контрольные компоненты и завершает
+команду с ошибкой при любом отклонении. Полный результат gate записывается в
+`expectation-result.json`. Остальные транзитивные зависимости остаются в отчёте.
 
