@@ -9,7 +9,7 @@ from .expectations import load_expectations, verify_expectations, verify_vex_exp
 from .findings import load_findings
 from .image import inspect_image
 from .llm import LlmConfig, analyze
-from .maven import load_dependency_tree
+from .maven import generate_dependency_tree, load_dependency_tree
 from .report import write_outputs
 from .sbom import enrich_sbom, load_sbom, reconcile
 from .vex import build_vex
@@ -21,6 +21,8 @@ class AnalysisConfig:
     sbom: Path
     image: str
     output: Path
+    pull_image: bool = False
+    source: Path | None = None
     dependency_tree: Path | None = None
     expectations: Path | None = None
     with_llm: bool = False
@@ -32,8 +34,13 @@ class AnalysisConfig:
 
 def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     sbom = load_sbom(config.sbom)
-    maven_scopes = load_dependency_tree(config.dependency_tree) if config.dependency_tree else {}
-    digest, observations = inspect_image(config.image)
+    dependency_tree = config.dependency_tree
+    if dependency_tree is None and config.source:
+        dependency_tree = generate_dependency_tree(
+            config.source, config.output / "evidence" / "dependency-tree.json"
+        )
+    maven_scopes = load_dependency_tree(dependency_tree) if dependency_tree else {}
+    digest, observations = inspect_image(config.image, pull=config.pull_image)
     items = reconcile(sbom, observations, maven_scopes)
     enriched = enrich_sbom(sbom, items, config.image, digest)
     discrepancies = [
@@ -71,6 +78,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         "discrepancies": len(discrepancies),
         "expectations": expectation_result,
         "vex": vex_result,
+        "dependency_tree": str(dependency_tree) if dependency_tree else None,
     }
 
 

@@ -3,7 +3,8 @@
 ```text
 TeamCity build
   ├── CycloneDX bom.json
-  └── image reference
+  ├── source checkout at build commit
+  └── image reference in registry
           │
           ▼
 Evidence collectors ──► normalized evidence store
@@ -23,6 +24,21 @@ Evidence collectors ──► normalized evidence store
 ```
 
 ## Контракты
+
+Обязательные исходные данные — CycloneDX SBOM из build artifacts, image reference
+и checkout того же commit. Анализатор выполняет pull образа и читает его слои без
+создания контейнера. Maven dependency tree создаётся самим анализатором из
+исходников и используется только как evidence о scope. Findings/VDR система
+выгружает через API из существующего проекта Dependency-Track.
+
+```text
+build artifact: sbom.json ────────────────┐
+source checkout ──► Maven scope evidence ─┤
+image reference ──► registry pull         ├─► reconciliation ─► enriched SBOM
+                       │                  │                    └► VEX
+                       └► image save/layers┘
+Dependency-Track project ──► VDR/findings ┘
+```
 
 Анализ относится к неизменяемому digest образа. Тег используется только для
 разрешения digest в начале задания. Каждый факт хранит источник, расположение и

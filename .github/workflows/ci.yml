@@ -50,7 +50,7 @@ jobs:
         run: |
           uv run sca-accuracy \
             --sbom golden/app/target/bom.json \
-            --dependency-tree golden/app/target/dependency-tree.json \
+            --source golden/app \
             --image sca-accuracy-golden:latest \
             --output out/golden \
             --expectations golden/expected-statuses.json \

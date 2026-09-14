@@ -13,10 +13,16 @@ def build_parser() -> argparse.ArgumentParser:
         description="Reconcile a CycloneDX SBOM with Java components delivered in a container image.",
     )
     parser.add_argument("--sbom", required=True, type=Path, help="CycloneDX JSON input")
+    parser.add_argument("--image", required=True, help="Container image reference or digest")
     parser.add_argument(
-        "--image", required=True, help="Locally available image reference or digest"
+        "--pull", action="store_true", help="Pull the image reference before inspecting its layers"
     )
     parser.add_argument("--output", type=Path, default=Path("out"), help="Output directory")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        help="Maven module source directory; used to derive dependency scopes when tree is absent",
+    )
     parser.add_argument(
         "--dependency-tree", type=Path, help="Maven dependency:tree JSON with resolved scopes"
     )
@@ -54,6 +60,8 @@ def run(args: argparse.Namespace) -> int:
             sbom=args.sbom,
             image=args.image,
             output=args.output,
+            pull_image=args.pull,
+            source=args.source,
             dependency_tree=args.dependency_tree,
             expectations=args.expectations,
             with_llm=args.with_llm,

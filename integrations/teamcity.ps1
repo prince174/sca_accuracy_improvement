@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory = $true)][string]$ProjectUuid,
     [Parameter(Mandatory = $true)][string]$Image,
     [Parameter(Mandatory = $true)][string]$Sbom,
+    [string]$Source = ".",
     [string]$DependencyTree,
     [string]$VulnerabilityRules,
     [string]$Output = "sca-accuracy-out",
@@ -31,11 +32,16 @@ $analysisArgs = @(
     "run", "sca-accuracy",
     "--sbom", $Sbom,
     "--image", $Image,
+    "--pull",
     "--output", $Output,
     "--findings", $findings,
     "--vex-mode", "safe"
 )
-if ($DependencyTree) { $analysisArgs += @("--dependency-tree", $DependencyTree) }
+if ($DependencyTree) {
+    $analysisArgs += @("--dependency-tree", $DependencyTree)
+} else {
+    $analysisArgs += @("--source", $Source)
+}
 if ($VulnerabilityRules) { $analysisArgs += @("--vulnerability-rules", $VulnerabilityRules) }
 if ($WithLlm) { $analysisArgs += "--with-llm" }
 & uv @analysisArgs

@@ -31,6 +31,8 @@ ARTIFACTS = {
 class AnalysisRequest(BaseModel):
     sbom_path: str
     image: str = Field(min_length=1, max_length=512)
+    pull_image: bool = True
+    source_path: str | None = None
     dependency_tree_path: str | None = None
     findings_path: str | None = None
     vulnerability_rules_path: str | None = None
@@ -64,6 +66,8 @@ class JobManager:
             sbom=self.resolve_input(request.sbom_path),
             image=request.image,
             output=self.results / job.id,
+            pull_image=request.pull_image,
+            source=self.resolve_source(request.source_path),
             dependency_tree=self.resolve_optional(request.dependency_tree_path),
             findings=self.resolve_optional(request.findings_path),
             vulnerability_rules=self.resolve_optional(request.vulnerability_rules_path),
@@ -104,6 +108,16 @@ class JobManager:
 
     def resolve_optional(self, value: str | None) -> Path | None:
         return self.resolve_input(value) if value else None
+
+    def resolve_source(self, value: str | None) -> Path | None:
+        if not value:
+            return None
+        candidate = (self.workspace / value).resolve()
+        if not candidate.is_relative_to(self.workspace):
+            raise ValueError("Source path must stay inside SCA_WORKSPACE")
+        if not candidate.is_dir() or not (candidate / "pom.xml").is_file():
+            raise FileNotFoundError(f"Maven source directory not found: {value}")
+        return candidate
 
     def _execute(self, job_id: str, config: AnalysisConfig) -> None:
         self._update(job_id, status="running")

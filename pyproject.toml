@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sca-accuracy-improvement"
-version = "0.2.0"
+version = "0.3.0"
 description = "Evidence-driven reconciliation of CycloneDX SBOMs with Java container images"
 readme = "README.md"
 requires-python = ">=3.11"

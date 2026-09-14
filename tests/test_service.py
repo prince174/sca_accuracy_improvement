@@ -28,6 +28,9 @@ def test_job_manager_rejects_paths_outside_workspace(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="inside SCA_WORKSPACE"):
         manager.resolve_input("../bom.json")
 
+    with pytest.raises(ValueError, match="inside SCA_WORKSPACE"):
+        manager.resolve_source("..")
+
 
 def test_submit_rejects_missing_sbom(tmp_path: Path) -> None:
     client = TestClient(create_app(tmp_path))

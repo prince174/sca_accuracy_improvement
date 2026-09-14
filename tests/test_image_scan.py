@@ -2,8 +2,9 @@ import io
 import tarfile
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
-from sca_accuracy.image import scan_exported_image, scan_saved_image
+from sca_accuracy.image import pull_image, scan_exported_image, scan_saved_image
 
 
 def make_jar(group: str, artifact: str, version: str) -> bytes:
@@ -71,3 +72,10 @@ def test_scan_saved_image_applies_layers_without_creating_container(tmp_path: Pa
 
     assert [item.identity.gav for item in result] == ["org.example:delivered:2.0"]
     assert result[0].location == "/app/delivered-2.0.jar"
+
+
+def test_pull_image_uses_registry_reference_without_shell() -> None:
+    with patch("sca_accuracy.image._run") as run:
+        pull_image("registry.example/team/app:42")
+
+    run.assert_called_once_with(["docker", "pull", "registry.example/team/app:42"])

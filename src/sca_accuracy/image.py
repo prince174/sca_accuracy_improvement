@@ -38,6 +38,10 @@ def save_image(image: str, destination: Path) -> None:
     _run(["docker", "image", "save", "--output", str(destination), image])
 
 
+def pull_image(image: str) -> None:
+    _run(["docker", "pull", image])
+
+
 def _pom_properties(zf: zipfile.ZipFile) -> list[ComponentIdentity]:
     identities: list[ComponentIdentity] = []
     for name in zf.namelist():
@@ -251,7 +255,9 @@ def _inspect_files(files: dict[str, bytes]) -> list[Observation]:
     return list(unique.values())
 
 
-def inspect_image(image: str) -> tuple[str, list[Observation]]:
+def inspect_image(image: str, pull: bool = False) -> tuple[str, list[Observation]]:
+    if pull:
+        pull_image(image)
     digest = inspect_digest(image)
     with tempfile.TemporaryDirectory(prefix="sca-accuracy-") as directory:
         archive = Path(directory) / "image.tar"

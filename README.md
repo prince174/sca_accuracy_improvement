@@ -6,6 +6,18 @@
 фактически попали в контейнерный образ. Результат привязан к digest образа, даже
 если входом был изменяемый тег вроде `image:latest`.
 
+Фактический входной контракт соответствует build pipeline:
+
+- `sbom.json` из артефактов Maven-сборки;
+- имя образа, который анализатор самостоятельно получает из registry с `--pull`;
+- checkout исходного кода на том же commit, что и сборка.
+
+`dependency-tree.json` не является обязательным артефактом. Если он не передан,
+анализатор создаёт его из checkout исходников через закреплённый
+`maven-dependency-plugin:3.11.0`. VDR также не требуется получать из TeamCity:
+end-to-end step сам выгружает его из проекта Dependency-Track после обработки
+исходного SBOM.
+
 Первая версия умеет:
 
 - прочитать слои сохранённого Docker-образа без создания и запуска контейнера;
@@ -42,6 +54,7 @@ docker compose up --build -d
 $headers = @{ Authorization = "Bearer $env:SCA_API_TOKEN" }
 $body = @{
   sbom_path = "bom.json"
+  source_path = "source"
   image = "image:latest"
   vex_mode = "safe"
 } | ConvertTo-Json
@@ -56,6 +69,11 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8080/v1/analyses/$($job.id)" -Headers $
 socket равнозначен административному доступу к Docker host, поэтому сервис следует
 размещать в отдельном доверенном контуре и защищать `SCA_API_TOKEN`.
 
+Для private Nexus Docker CLI внутри сервиса должен получить registry credentials
+через секретно смонтированный Docker `config.json`. Корпоративный Maven
+`settings.xml` с mirror/credentials аналогично монтируется в `/root/.m2`; named
+volume `maven-cache` сохраняет уже загруженные зависимости.
+
 ## Быстрый запуск
 
 Нужны Python 3.11+, `uv` и Docker с локально доступным образом.
@@ -67,8 +85,14 @@ uv run sca-accuracy `
   --sbom G:\path\to\bom.json `
   --image image:latest `
   --output out `
-  --dependency-tree G:\path\to\dependency-tree.json
+  --source G:\path\to\source `
+  --pull
 ```
+
+`--source` должен указывать на Maven-модуль с `pom.xml`, которому соответствует
+SBOM. Для уже подготовленного дерева вместо него можно передать
+`--dependency-tree`. Генерация Maven evidence выполняет Maven над доверенным
+checkout проекта и может обращаться к настроенным корпоративным репозиториям.
 
 Для анализа расхождений через DeepSeek задайте переменные окружения. Значения по
 умолчанию совпадают с конфигурацией Altron; `.env` автоматически не читается, чтобы
