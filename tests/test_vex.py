@@ -6,7 +6,7 @@ from sca_accuracy.vulnerability_rules import VulnerabilityRule
 REF = "pkg:maven/org.junit.jupiter/junit-jupiter-api@5.10.3?type=jar"
 
 
-def test_safe_vex_closes_only_absent_test_dependency() -> None:
+def test_absent_test_dependency_does_not_prove_not_affected() -> None:
     identity = ComponentIdentity("org.junit.jupiter", "junit-jupiter-api", "5.10.3")
     sbom = {
         "metadata": {
@@ -40,15 +40,9 @@ def test_safe_vex_closes_only_absent_test_dependency() -> None:
     safe, assessments = build_vex(sbom, [finding], [item], "sha256:test", mode="safe")
 
     assert advisory["vulnerabilities"][0]["analysis"]["state"] == "in_triage"
-    assert safe["vulnerabilities"][0]["analysis"] == {
-        "state": "not_affected",
-        "detail": (
-            "The Maven dependency has test scope and was not observed in the delivered image "
-            "identified by sha256:test."
-        ),
-        "justification": "code_not_present",
-    }
-    assert assessments[0]["automation"] == "deterministic_safe_rule"
+    assert safe["vulnerabilities"][0]["analysis"]["state"] == "in_triage"
+    assert "justification" not in safe["vulnerabilities"][0]["analysis"]
+    assert assessments[0]["automation"] == "advisory"
 
 
 def test_unresolved_component_is_not_emitted_to_vex() -> None:
@@ -64,7 +58,7 @@ def test_unresolved_component_is_not_emitted_to_vex() -> None:
     assert assessments[0]["emitted_to_vex"] is False
 
 
-def test_safe_vex_marks_exact_referenced_vulnerable_symbol_exploitable() -> None:
+def test_static_symbol_reference_does_not_prove_exploitability() -> None:
     identity = ComponentIdentity("org.example", "library", "1.0")
     component_ref = "pkg:maven/org.example/library@1.0"
     symbol = "org.example.Library#vulnerable()V"
@@ -117,6 +111,6 @@ def test_safe_vex_marks_exact_referenced_vulnerable_symbol_exploitable() -> None
         rules={"CVE-TEST": rule},
     )
 
-    assert vex["vulnerabilities"][0]["analysis"]["state"] == "exploitable"
+    assert vex["vulnerabilities"][0]["analysis"]["state"] == "in_triage"
     assert assessments[0]["automation"] == "deterministic_symbol_match"
     assert assessments[0]["matched_symbols"] == symbol

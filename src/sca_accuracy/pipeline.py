@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from .catalog import coverage, inspect_image, observations_from_catalog, scan
 from .expectations import load_expectations, verify_expectations, verify_vex_expectations
 from .findings import load_findings
-from .image import inspect_image
 from .llm import LlmConfig, analyze
-from .maven import generate_dependency_tree, load_dependency_tree
+from .maven import load_dependency_tree
 from .report import write_outputs
 from .sbom import enrich_sbom, load_sbom, reconcile
 from .vex import build_vex
@@ -35,13 +35,32 @@ class AnalysisConfig:
 def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     sbom = load_sbom(config.sbom)
     dependency_tree = config.dependency_tree
-    if dependency_tree is None and config.source:
-        dependency_tree = generate_dependency_tree(
-            config.source, config.output / "evidence" / "dependency-tree.json"
-        )
     maven_scopes = load_dependency_tree(dependency_tree) if dependency_tree else {}
-    digest, observations = inspect_image(config.image, pull=config.pull_image)
+    evidence = config.output / "evidence"
+    source_catalog = (
+        scan(f"dir:{config.source.resolve()}", evidence / "source.syft.json")
+        if config.source
+        else None
+    )
+    digest, observations, image_catalog = inspect_image(
+        config.image, evidence, pull=config.pull_image
+    )
+    _write_json(config.output / "coverage.json", coverage(image_catalog, source_catalog))
     items = reconcile(sbom, observations, maven_scopes)
+    source_items = []
+    if source_catalog is not None:
+        source_items = reconcile(sbom, observations_from_catalog(source_catalog))
+        for item in source_items:
+            item.explanation = item.explanation.replace(
+                "delivered image", "source catalog"
+            ).replace("the image", "the source catalog")
+        _write_json(
+            config.output / "source-assessment.json",
+            {
+                "provenance": "checkout catalog; not original build resolution",
+                "items": [item.to_dict() for item in source_items],
+            },
+        )
     enriched = enrich_sbom(sbom, items, config.image, digest)
     discrepancies = [
         item.to_dict()
@@ -57,6 +76,8 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                 "digest": digest,
                 "discrepancies": discrepancies,
                 "findings": [finding.to_dict() for finding in findings],
+                "coverage": coverage(image_catalog, source_catalog),
+                "source_evidence": [item.to_dict() for item in source_items],
             },
             LlmConfig.from_environment(),
         )

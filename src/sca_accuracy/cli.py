@@ -10,7 +10,7 @@ from .pipeline import AnalysisConfig, run_analysis
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="sca-accuracy",
-        description="Reconcile a CycloneDX SBOM with Java components delivered in a container image.",
+        description="Reconcile a CycloneDX SBOM with components delivered in a container image.",
     )
     parser.add_argument("--sbom", required=True, type=Path, help="CycloneDX JSON input")
     parser.add_argument("--image", required=True, help="Container image reference or digest")
@@ -21,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--source",
         type=Path,
-        help="Maven module source directory; used to derive dependency scopes when tree is absent",
+        help="Source checkout; scanned without running a build or dependency resolution",
     )
     parser.add_argument(
         "--dependency-tree", type=Path, help="Maven dependency:tree JSON with resolved scopes"
@@ -39,7 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--vex-mode",
         choices=("advisory", "safe"),
         default="advisory",
-        help="VEX policy: advisory keeps findings in triage; safe enables deterministic rules",
+        help="Compatibility option; both modes retain in_triage until stronger evidence is available",
     )
     parser.add_argument(
         "--vulnerability-rules",

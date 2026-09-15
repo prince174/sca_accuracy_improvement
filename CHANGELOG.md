@@ -1,3 +1,10 @@
+# 0.4.0
+
+- Syft image/source catalogs, Package URL reconciliation, explicit coverage.
+- No automatic Maven execution; immutable image ID scanning.
+- Conservative VEX: absence/static references do not prove vulnerability status.
+- Multi-ecosystem golden fixture and regression tests.
+
 # Changelog
 
 ## 0.3.0 — 2026-09-14

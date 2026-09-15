@@ -114,24 +114,14 @@ def _decision(
         matched = sorted(observed_symbols & rule.symbols)
         if matched:
             return {
-                "state": "exploitable",
+                "state": "in_triage",
                 "detail": (
-                    "The application bytecode directly references a vulnerable symbol in the "
+                    "Static bytecode references a rule-associated symbol; exploitability is unproven in the "
                     f"delivered image {image_digest}: {', '.join(matched)}"
                 ),
                 "automation": "deterministic_symbol_match",
                 "matched_symbols": ",".join(matched),
             }
-    if mode == "safe" and item.status == "expected_absent" and item.maven_scope == "test":
-        return {
-            "state": "not_affected",
-            "justification": "code_not_present",
-            "detail": (
-                "The Maven dependency has test scope and was not observed in the delivered image "
-                f"identified by {image_digest}."
-            ),
-            "automation": "deterministic_safe_rule",
-        }
     return {
         "state": "in_triage",
         "detail": (

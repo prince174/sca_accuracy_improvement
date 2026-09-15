@@ -4,13 +4,15 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sca-accuracy-improvement"
-version = "0.3.0"
-description = "Evidence-driven reconciliation of CycloneDX SBOMs with Java container images"
+version = "0.4.0"
+description = "Evidence-driven reconciliation of CycloneDX SBOMs with multi-ecosystem container images"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
 authors = [{ name = "SCA Accuracy Improvement contributors" }]
-dependencies = []
+dependencies = [
+    "packageurl-python>=0.17,<1",
+]
 
 [project.optional-dependencies]
 dev = ["fastapi>=0.115", "httpx>=0.28", "pytest>=8.0", "ruff>=0.9"]

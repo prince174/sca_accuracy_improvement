@@ -46,11 +46,19 @@ jobs:
             --mount "type=volume,source=sca-accuracy-m2,target=/root/.m2" \
             -w /workspace/image-libs maven:3.9.11-eclipse-temurin-21 mvn -B clean package
           docker build --tag sca-accuracy-golden:latest golden
+      - name: Install pinned Syft
+        run: |
+          curl -sSfL https://github.com/anchore/syft/releases/download/v1.51.1/syft_1.51.1_linux_amd64.tar.gz -o /tmp/syft.tar.gz
+          curl -sSfL https://github.com/anchore/syft/releases/download/v1.51.1/syft_1.51.1_checksums.txt -o /tmp/checksums.txt
+          cp /tmp/syft.tar.gz /tmp/syft_1.51.1_linux_amd64.tar.gz
+          (cd /tmp && grep ' syft_1.51.1_linux_amd64.tar.gz$' checksums.txt | sha256sum -c -)
+          sudo tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft
       - name: Reconcile image and enforce golden decisions
         run: |
           uv run sca-accuracy \
             --sbom golden/app/target/bom.json \
             --source golden/app \
+            --dependency-tree golden/app/target/dependency-tree.json \
             --image sca-accuracy-golden:latest \
             --output out/golden \
             --expectations golden/expected-statuses.json \
@@ -58,6 +66,8 @@ jobs:
             --vex-mode safe \
             --vulnerability-rules golden/vulnerability-rules.json \
             --vex-expectations golden/expected-vex-states.json
+      - name: Verify multi-ecosystem image and source fixture
+        run: uv run python golden/universal/verify.py
       - name: Validate CycloneDX VEX
         run: |
           docker run --rm \

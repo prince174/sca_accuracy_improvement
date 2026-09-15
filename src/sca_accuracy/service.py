@@ -19,6 +19,8 @@ from .version import __version__
 
 ARTIFACTS = {
     "assessment.json",
+    "coverage.json",
+    "source-assessment.json",
     "expectation-result.json",
     "inventory.json",
     "report.html",
@@ -115,8 +117,8 @@ class JobManager:
         candidate = (self.workspace / value).resolve()
         if not candidate.is_relative_to(self.workspace):
             raise ValueError("Source path must stay inside SCA_WORKSPACE")
-        if not candidate.is_dir() or not (candidate / "pom.xml").is_file():
-            raise FileNotFoundError(f"Maven source directory not found: {value}")
+        if not candidate.is_dir():
+            raise FileNotFoundError(f"Source directory not found: {value}")
         return candidate
 
     def _execute(self, job_id: str, config: AnalysisConfig) -> None:

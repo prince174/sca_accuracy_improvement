@@ -5,7 +5,8 @@ import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote
+
+from packageurl import PackageURL
 
 from .models import ComponentIdentity, Observation, ReconciliationItem
 from .version import __version__
@@ -40,17 +41,26 @@ def iter_all_components(sbom: dict[str, Any]) -> Iterator[dict[str, Any]]:
 
 def identity_from_component(component: dict[str, Any]) -> ComponentIdentity | None:
     purl = component.get("purl")
-    if isinstance(purl, str) and purl.startswith("pkg:maven/"):
-        value = purl.removeprefix("pkg:maven/").split("?", 1)[0].split("#", 1)[0]
-        package, separator, version = value.partition("@")
-        parts = package.split("/", 1)
-        if separator and len(parts) == 2:
-            return ComponentIdentity(unquote(parts[0]), unquote(parts[1]), unquote(version))
+    if isinstance(purl, str):
+        try:
+            parsed = PackageURL.from_string(purl)
+        except ValueError:
+            return None
+        qualifiers = dict(parsed.qualifiers or {})
+        if parsed.type == "maven" and qualifiers.get("type") == "jar":
+            qualifiers.pop("type")
+        return ComponentIdentity(
+            parsed.namespace or "",
+            parsed.name,
+            parsed.version or "",
+            parsed.type,
+            tuple(sorted(qualifiers.items())),
+        )
     group = str(component.get("group", ""))
     name = str(component.get("name", ""))
     version = str(component.get("version", ""))
     if name and version:
-        return ComponentIdentity(group, name, version)
+        return ComponentIdentity(group, name, version, "generic")
     return None
 
 
@@ -61,18 +71,29 @@ def reconcile(
 ) -> list[ReconciliationItem]:
     maven_scopes = maven_scopes or {}
     by_gav: dict[str, list[Observation]] = {}
-    by_ga: dict[tuple[str, str], list[Observation]] = {}
+    by_ga: dict[tuple, list[Observation]] = {}
     for observation in observations:
         by_gav.setdefault(observation.identity.gav, []).append(observation)
-        by_ga.setdefault((observation.identity.group, observation.identity.name), []).append(
-            observation
-        )
+        by_ga.setdefault(observation.identity.package_key, []).append(observation)
 
     result: list[ReconciliationItem] = []
     matched_locations: set[tuple[str, str]] = set()
     for component in iter_all_components(sbom):
         identity = identity_from_component(component)
         if identity is None:
+            result.append(
+                ReconciliationItem(
+                    status="identity_uncertain",
+                    identity=ComponentIdentity(
+                        "",
+                        str(component.get("name", "unknown")),
+                        str(component.get("version", "")),
+                        "generic",
+                    ),
+                    bom_ref=component.get("bom-ref"),
+                    explanation="Missing or invalid package identity; cannot compare safely.",
+                )
+            )
             continue
         exact = by_gav.get(identity.gav, [])
         for observation in exact:
@@ -87,26 +108,29 @@ def reconcile(
                     observations=exact,
                     maven_scope=maven_scopes.get(identity.gav),
                     explanation=(
-                        "Exact Maven coordinates were observed in the delivered image."
+                        "Exact package coordinates were observed in the delivered image."
                         if strong
                         else "Only weak filename evidence supports this component identity."
                     ),
                 )
             )
             continue
-        conflicts = by_ga.get((identity.group, identity.name), [])
+        conflicts = by_ga.get(identity.package_key, [])
         for observation in conflicts:
             matched_locations.add((observation.identity.gav, observation.location))
         scope = maven_scopes.get(identity.gav)
         if conflicts:
             status = "version_conflict"
-            explanation = "The image contains the same Maven package with another version."
+            explanation = "The image contains the same package with another version."
+        elif identity.ecosystem == "generic" or not identity.version:
+            status = "identity_uncertain"
+            explanation = "Package ecosystem or version is unknown; cannot determine absence."
         elif scope in NON_RUNTIME_SCOPES:
             status = "expected_absent"
             explanation = f"Maven scope '{scope}' is not expected in the runtime image."
         else:
             status = "unexpected_absent"
-            explanation = "A declared runtime component was not identified in the image."
+            explanation = "The component was not detected; this does not prove absence or lack of reachability."
         result.append(
             ReconciliationItem(
                 status=status,
@@ -121,6 +145,9 @@ def reconcile(
     for observation in observations:
         key = (observation.identity.gav, observation.location)
         if key not in matched_locations:
+            matched_locations.update(
+                (entry.identity.gav, entry.location) for entry in by_gav[observation.identity.gav]
+            )
             result.append(
                 ReconciliationItem(
                     status=(
@@ -129,9 +156,9 @@ def reconcile(
                         else "identity_uncertain"
                     ),
                     identity=observation.identity,
-                    observations=[observation],
+                    observations=by_gav[observation.identity.gav],
                     explanation=(
-                        "Maven metadata was observed in the image but has no matching SBOM component."
+                        "Package metadata was observed in the image but has no matching SBOM component."
                         if observation.confidence >= 0.8
                         else "A JAR filename suggests a component that is not declared in the SBOM."
                     ),
@@ -184,7 +211,7 @@ def enrich_sbom(
     for item in items:
         if item.status != "observed_not_declared" or item.identity.gav in declared_gavs:
             continue
-        purl = f"pkg:maven/{item.identity.group}/{item.identity.name}@{item.identity.version}"
+        purl = item.identity.purl
         enriched.setdefault("components", []).append(
             {
                 "type": "library",

@@ -1,7 +1,7 @@
 # TeamCity integration
 
 Добавьте PowerShell build step после сборки и push образа. Агент должен иметь
-Python 3.11+, `uv`, Maven, Docker CLI и доступ к registry. Docker login к Nexus
+Python 3.11+, `uv`, Syft 1.51.1, Docker CLI и доступ к registry. Docker login к Nexus
 выполняется штатным секретным шагом pipeline до запуска интеграции.
 
 ```powershell
@@ -31,4 +31,4 @@ Python 3.11+, `uv`, Maven, Docker CLI и доступ к registry. Docker login 
 
 Если `-DependencyTree` не передан, анализатор сам вызывает закреплённую версию
 `maven-dependency-plugin:tree` в каталоге `-Source`. Для multi-module проекта
-передавайте каталог Maven-модуля, которому соответствует SBOM.
+передавайте checkout соответствующего commit; сборщики не запускаются.

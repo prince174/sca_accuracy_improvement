@@ -1,5 +1,5 @@
 {
-  "GOLDEN-2026-0001": "exploitable",
+  "GOLDEN-2026-0001": "in_triage",
   "GOLDEN-2026-0002": "in_triage",
-  "GOLDEN-2026-0003": "not_affected"
+  "GOLDEN-2026-0003": "in_triage"
 }

@@ -27,7 +27,12 @@ def write_outputs(
         "digest": digest,
         "observations": [item.to_dict() for item in observations],
     }
+    coverage_path = output_dir / "coverage.json"
+    coverage = (
+        json.loads(coverage_path.read_text(encoding="utf-8")) if coverage_path.exists() else None
+    )
     assessment = {
+        "coverage": coverage,
         "schema_version": "1",
         "generated_at": generated_at,
         "image": image,
@@ -122,7 +127,7 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
   <h2>Component reconciliation</h2>
   <table><thead><tr><th>Status</th><th>Component</th><th>Observed at</th><th>Usage</th><th>Explanation</th></tr></thead>
   <tbody>{"".join(rows)}</tbody></table>
-  {llm_section}
+  <section><h2>Coverage and limitations</h2><pre>{escape(json.dumps(assessment.get("coverage"), ensure_ascii=False, indent=2))}</pre></section>{llm_section}
 </main></body></html>
 """
     path.write_text(document, encoding="utf-8")

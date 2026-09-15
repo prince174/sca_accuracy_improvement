@@ -39,9 +39,8 @@ $analysisArgs = @(
 )
 if ($DependencyTree) {
     $analysisArgs += @("--dependency-tree", $DependencyTree)
-} else {
-    $analysisArgs += @("--source", $Source)
 }
+$analysisArgs += @("--source", $Source)
 if ($VulnerabilityRules) { $analysisArgs += @("--vulnerability-rules", $VulnerabilityRules) }
 if ($WithLlm) { $analysisArgs += "--with-llm" }
 & uv @analysisArgs
@@ -56,8 +55,10 @@ if ($enrichedUpload.token) {
     uv run sca-accuracy-dtrack wait-bom --token $enrichedUpload.token --timeout 600
     if ($LASTEXITCODE -ne 0) { throw "Dependency-Track did not finish the enriched SBOM" }
 }
-uv run sca-accuracy-dtrack apply-vex --project $ProjectUuid --file $vex
-if ($LASTEXITCODE -ne 0) { throw "VEX upload failed" }
+if (Test-Path -LiteralPath $vex) {
+    uv run sca-accuracy-dtrack apply-vex --project $ProjectUuid --file $vex
+    if ($LASTEXITCODE -ne 0) { throw "VEX upload failed" }
+}
 
 Write-Output "##teamcity[publishArtifacts '$Output/** => sca-accuracy.zip']"
 Write-Output "SCA accuracy pipeline completed for $Image"

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
+from packageurl import PackageURL
+
 MatchStatus = Literal[
     "confirmed_present",
     "expected_absent",
@@ -18,10 +20,30 @@ class ComponentIdentity:
     group: str
     name: str
     version: str
+    ecosystem: str = "maven"
+    qualifiers: tuple[tuple[str, str], ...] = ()
+
+    @property
+    def purl(self) -> str:
+        return PackageURL(
+            self.ecosystem,
+            self.group or None,
+            self.name,
+            self.version or None,
+            dict(self.qualifiers) or None,
+        ).to_string()
+
+    @property
+    def package_key(self) -> tuple[str, str, str, tuple[tuple[str, str], ...]]:
+        return self.ecosystem, self.group, self.name, self.qualifiers
 
     @property
     def gav(self) -> str:
-        return f"{self.group}:{self.name}:{self.version}"
+        return (
+            f"{self.group}:{self.name}:{self.version}"
+            if self.ecosystem == "maven" and not self.qualifiers
+            else self.purl
+        )
 
 
 @dataclass(slots=True)
