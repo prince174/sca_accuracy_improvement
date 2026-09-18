@@ -3,22 +3,11 @@
 Сервис состоит из HTTP-слоя, загрузчиков удалённых входов и ядра анализа.
 Главный результат — отдельный enriched CycloneDX SBOM для каждой пары SBOM/образ.
 
-```mermaid
-flowchart LR
-  Client[Внешний pipeline] --> API[FastAPI v2]
-  API --> Jobs[JobManager: очередь и состояние]
-  Jobs --> Remote[Remote input loader]
-  TC[TeamCity artifact HTTPS] --> Remote
-  BB[Bitbucket Git HTTPS + commit] --> Remote
-  Remote --> Core[run_analysis для каждой пары]
-  Nexus[Nexus Docker registry] --> Core
-  Core --> Syft[Syft: image и source catalogs]
-  Syft --> Compare[PURL reconciliation]
-  Compare --> Files[SBOM + отчёты + provenance]
-  Files --> API
-  API --> Client
-  Client --> DT[Dependency-Track]
-```
+![Схема работы системы](diagrams/system-workflow.png)
+
+[Редактируемая схема draw.io](diagrams/system-workflow.drawio) ·
+[PNG в полном размере](diagrams/system-workflow.png)
+
 
 ## Входной контракт
 

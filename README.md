@@ -31,23 +31,14 @@ SBOM, созданный во время сборки, и состав пост�
 
 ## Как проходит одно задание
 
-```mermaid
-flowchart TD
-  API[HTTP request: targets + repository + commit] --> TC[Скачать SBOM из TeamCity]
-  API --> BB[Получить точный commit из Bitbucket]
-  API --> NX[Скачать образы из Nexus]
-  BB --> SRC[Syft: каталог исходников]
-  NX --> SAVE[Закрепить image ID и сохранить архив]
-  SAVE --> IMG[Syft: каталог итогового содержимого]
-  TC --> COMP[Сравнить SBOM с образом]
-  IMG --> COMP
-  TC --> SOURCECOMP[Отдельно сравнить SBOM с исходниками]
-  SRC --> SOURCECOMP
-  COMP --> OUT[Enriched SBOM + отчёты + provenance]
-  SOURCECOMP --> OUT
-  OUT --> GET[Внешний pipeline скачивает результаты]
-  GET --> DT[Внешний pipeline обновляет Dependency-Track]
-```
+![Схема работы SCA Accuracy Improvement](docs/diagrams/system-workflow.png)
+
+[Открыть редактируемую схему draw.io](docs/diagrams/system-workflow.drawio) ·
+[Открыть PNG в полном размере](docs/diagrams/system-workflow.png)
+
+Файл `.drawio` открывается в draw.io Desktop или через **File → Open From → Device**
+в diagrams.net. Все блоки, подписи и соединения редактируются отдельно.
+
 
 1. Проверяются структура запроса, точный hash commit, разрешённые адреса и ссылки.
 2. Создаётся изолированный временный checkout. Git получает указанный commit,
