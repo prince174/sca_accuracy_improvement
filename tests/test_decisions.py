@@ -48,6 +48,7 @@ def test_hash_correction_removes_wrong_version_preserves_graph_and_original():
     assert result["components"][0]["purl"] == "pkg:maven/org/demo@2"
     assert result["dependencies"] == bom["dependencies"]
     assert audit["accepted"][0]["before"]["version"] == "1"
+    assert result["version"] == 2
 
 
 @pytest.mark.parametrize(
@@ -141,3 +142,19 @@ def test_model_defer_is_not_overridden_by_automatic_enrichment(tmp_path):
     output = json.loads((tmp_path / "out/sbom.enriched.json").read_text())
     assert len(output["components"]) == 1
     assert output["components"][0]["version"] == "1"
+
+
+def test_malformed_action_and_duplicate_are_audited():
+    bom, obs = fixture()
+    plan = plan_for(bom, obs)
+    bad = {**plan[0], "action": []}
+    result, audit = apply_plan(bom, obs, [bad, plan[0], plan[0]])
+    assert len(audit["rejected"]) == 2
+    assert len(result["components"]) == 2
+
+
+def test_model_contract_requires_decisions():
+    from sca_accuracy.llm import _extract_json
+
+    with pytest.raises(TypeError, match="decisions"):
+        _extract_json(json.dumps({"summary": "ok", "hypotheses": [], "warnings": []}))

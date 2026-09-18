@@ -134,5 +134,7 @@ def apply_plan(
         )
         audit["accepted"].append({**candidate, "reason": reason})
     audit["unreviewed"] = sorted(set(allowed) - seen)
+    if audit["accepted"]:
+        result["version"] = sbom.get("version", 1) + 1
     audit["input_sha256"] = hashlib.sha256(json.dumps(sbom, sort_keys=True).encode()).hexdigest()
     return result, audit

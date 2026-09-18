@@ -97,6 +97,13 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
     llm_section = (
         f"<section><h2>LLM analysis</h2><p>{escape(llm['summary'])}</p></section>" if llm else ""
     )
+    decision_section = (
+        '<section><h2>Validated model decisions</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'
+        + escape(json.dumps(assessment["decisions"], ensure_ascii=False, indent=2))
+        + "</pre></section>"
+        if assessment.get("decisions") is not None
+        else ""
+    )
     document = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -130,7 +137,7 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
   <h2>Component reconciliation</h2>
   <table><thead><tr><th>Status</th><th>Component</th><th>Observed at</th><th>Usage</th><th>Explanation</th></tr></thead>
   <tbody>{"".join(rows)}</tbody></table>
-  <section><h2>Coverage and limitations</h2><pre>{escape(json.dumps(assessment.get("coverage"), ensure_ascii=False, indent=2))}</pre></section>{llm_section}
+  <section><h2>Coverage and limitations</h2><pre>{escape(json.dumps(assessment.get("coverage"), ensure_ascii=False, indent=2))}</pre></section>{llm_section}{decision_section}
 </main></body></html>
 """
     path.write_text(document, encoding="utf-8")

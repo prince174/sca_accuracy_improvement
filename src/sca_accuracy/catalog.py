@@ -114,7 +114,10 @@ def inspect_image(
             ]
             hashes = {entry.sha256 for entry in matches if entry.sha256}
             if len(hashes) == 1:
-                observation.sha256 = next(iter(hashes))
+                digest = next(iter(hashes))
+                identities = {entry.identity for entry in java if entry.sha256 == digest}
+                if identities == {observation.identity}:
+                    observation.sha256 = digest
     return image_id, observations, data
 
 
