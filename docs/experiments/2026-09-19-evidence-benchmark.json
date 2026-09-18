@@ -1,0 +1,240 @@
+{
+  "date": "2026-09-19",
+  "context": {
+    "dataset_sha256": "72dad45b6a932b68ba67a1db0fb34efae029ca481c43a805879ef7b0bdaec496",
+    "endpoint": "https://api.deepseek.com/v1",
+    "evaluator_sha256": "a185dcc347e1054cd3f6bf4946c3150fece91940897aef057def716dc7c41855",
+    "generator": "inventory-cases-v1",
+    "live": true,
+    "model": "deepseek-v4-flash",
+    "prompt_sha256": "51b3f6859ac224d541e627271446d3d4482222ec186b4f53c6d1285444065324",
+    "temperature": 0
+  },
+  "cases": 588,
+  "synthetic_live_cases": 196,
+  "synthetic_api_calls": 124,
+  "scanned_image_cases": 6,
+  "scanned_api_calls": 3,
+  "offline_all": {
+    "allowed_rules": {
+      "cases": 588,
+      "fn": 36,
+      "fp": 222,
+      "precision": 0.7153846153846154,
+      "recall": 0.9393939393939394,
+      "tp": 558,
+      "unresolved": 36
+    },
+    "input": {
+      "cases": 588,
+      "fn": 447,
+      "fp": 225,
+      "precision": 0.3951612903225806,
+      "recall": 0.2474747474747475,
+      "tp": 147,
+      "unresolved": 36
+    },
+    "legacy_rules": {
+      "cases": 588,
+      "fn": 117,
+      "fp": 225,
+      "precision": 0.6794871794871795,
+      "recall": 0.803030303030303,
+      "tp": 477,
+      "unresolved": 36
+    }
+  },
+  "synthetic_paired_all": {
+    "allowed_rules": {
+      "cases": 196,
+      "fn": 12,
+      "fp": 74,
+      "precision": 0.7153846153846154,
+      "recall": 0.9393939393939394,
+      "tp": 186,
+      "unresolved": 12
+    },
+    "legacy_rules": {
+      "cases": 196,
+      "fn": 39,
+      "fp": 75,
+      "precision": 0.6794871794871795,
+      "recall": 0.803030303030303,
+      "tp": 159,
+      "unresolved": 12
+    },
+    "model": {
+      "cases": 196,
+      "fn": 65,
+      "fp": 74,
+      "precision": 0.642512077294686,
+      "recall": 0.6717171717171717,
+      "tp": 133,
+      "unresolved": 12
+    }
+  },
+  "synthetic_paired_called": {
+    "allowed_rules": {
+      "cases": 124,
+      "fn": 0,
+      "fp": 50,
+      "precision": 0.7641509433962265,
+      "recall": 1.0,
+      "tp": 162,
+      "unresolved": 12
+    },
+    "legacy_rules": {
+      "cases": 124,
+      "fn": 27,
+      "fp": 51,
+      "precision": 0.7258064516129032,
+      "recall": 0.8333333333333334,
+      "tp": 135,
+      "unresolved": 12
+    },
+    "model": {
+      "cases": 124,
+      "fn": 53,
+      "fp": 50,
+      "precision": 0.6855345911949685,
+      "recall": 0.6728395061728395,
+      "tp": 109,
+      "unresolved": 12
+    }
+  },
+  "scanned_all": {
+    "allowed_rules": {
+      "cases": 6,
+      "fn": 0,
+      "fp": 2,
+      "precision": 0.7777777777777778,
+      "recall": 1.0,
+      "tp": 7,
+      "unresolved": 0
+    },
+    "legacy_rules": {
+      "cases": 6,
+      "fn": 1,
+      "fp": 2,
+      "precision": 0.75,
+      "recall": 0.8571428571428571,
+      "tp": 6,
+      "unresolved": 0
+    },
+    "model": {
+      "cases": 6,
+      "fn": 0,
+      "fp": 2,
+      "precision": 0.7777777777777778,
+      "recall": 1.0,
+      "tp": 7,
+      "unresolved": 0
+    }
+  },
+  "scanned_called": {
+    "allowed_rules": {
+      "cases": 3,
+      "fn": 0,
+      "fp": 1,
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "tp": 5,
+      "unresolved": 0
+    },
+    "legacy_rules": {
+      "cases": 3,
+      "fn": 1,
+      "fp": 1,
+      "precision": 0.8,
+      "recall": 0.8,
+      "tp": 4,
+      "unresolved": 0
+    },
+    "model": {
+      "cases": 3,
+      "fn": 0,
+      "fp": 1,
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "tp": 5,
+      "unresolved": 0
+    }
+  },
+  "model_decisions": {
+    "accepted": 84,
+    "rejected": 0,
+    "deferred": 54,
+    "unreviewed": 0
+  },
+  "failures": [],
+  "storage_counts": {
+    "evidence_runs": 600,
+    "evidence_observations": 1920,
+    "evidence_artifacts": 7170,
+    "evidence_labels": 0
+  },
+  "unique_artifacts_verified": 3810,
+  "raw_report_sha256": "d1760eaf0d63b2f74f2091bdae2cf4598174108de477a39c1271ac2fc1216c1e",
+  "scanned_report_sha256": "a191542c5fc371d678bb7594b599e81b18f675dc219ac7cb77a4aa86b7bd73cb",
+  "model_worse_case_ids": [
+    "maven-version_conflict-000",
+    "maven-ambiguous_hash-000",
+    "maven-vulnerability_refs-000",
+    "npm-undeclared-000",
+    "npm-version_conflict-000",
+    "npm-namespace_collision-000",
+    "npm-untrusted_metadata-000",
+    "npm-mixed-000",
+    "pypi-undeclared-000",
+    "pypi-namespace_collision-000",
+    "pypi-untrusted_metadata-000",
+    "pypi-mixed-000",
+    "nuget-version_conflict-000",
+    "nuget-namespace_collision-000",
+    "nuget-invalid_purl-000",
+    "nuget-untrusted_metadata-000",
+    "nuget-mixed-000",
+    "golang-undeclared-000",
+    "golang-version_conflict-000",
+    "cargo-version_conflict-000",
+    "cargo-namespace_collision-000",
+    "cargo-untrusted_metadata-000",
+    "cargo-mixed-000",
+    "gem-undeclared-000",
+    "gem-version_conflict-000",
+    "gem-duplicate_locations-000",
+    "gem-invalid_purl-000",
+    "gem-mixed-000",
+    "composer-version_conflict-000",
+    "composer-qualifier_collision-000",
+    "composer-invalid_purl-000",
+    "composer-untrusted_metadata-000",
+    "composer-mixed-000",
+    "apk-version_conflict-000",
+    "apk-namespace_collision-000",
+    "apk-invalid_purl-000",
+    "apk-untrusted_metadata-000",
+    "apk-mixed-000",
+    "deb-undeclared-000",
+    "deb-namespace_collision-000",
+    "deb-mixed-000",
+    "rpm-version_conflict-000",
+    "rpm-qualifier_collision-000",
+    "rpm-duplicate_locations-000",
+    "rpm-untrusted_metadata-000",
+    "hex-undeclared-000",
+    "hex-version_conflict-000",
+    "hex-qualifier_collision-000",
+    "hex-untrusted_metadata-000",
+    "hex-mixed-000"
+  ],
+  "limitations": [
+    "Synthetic inventory cases; not measured on real customer builds.",
+    "No vulnerability or runtime reachability conclusions.",
+    "No-candidate cases bypass model and are reported separately.",
+    "Unresolved identities are counted separately, not labeled false positives.",
+    "Synthetic source labels influenced model refusals; source-label effect was not isolated in a randomized paired experiment.",
+    "No human-reviewed production builds in this dataset.",
+    "No measured advantage for the current model as an edit gate."
+  ]
+}
