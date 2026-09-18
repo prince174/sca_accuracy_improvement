@@ -44,37 +44,37 @@
         <mxCell id="mode" value="&lt;b&gt;Режимы&lt;/b&gt;&lt;br&gt;&lt;br&gt;API v2: with_llm=true по умолчанию.&lt;br&gt;false: обогащение правилами без модели.&lt;br&gt;&lt;br&gt;Ошибка модели → failed.&lt;br&gt;Без скрытого fallback." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="60" y="560" width="380" height="280" />
         </mxCell>
-        <mxCell id="request-sbom" edge="1" parent="1" source="request" target="sbom" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="request-sbom" edge="1" parent="1" source="request" target="sbom" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="request-source" edge="1" parent="1" source="request" target="source" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="request-source" edge="1" parent="1" source="request" target="source" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="request-image" edge="1" parent="1" source="request" target="image" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="request-image" edge="1" parent="1" source="request" target="image" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="sbom-evidence" edge="1" parent="1" source="sbom" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="sbom-evidence" edge="1" parent="1" source="sbom" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="source-evidence" edge="1" parent="1" source="source" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="source-evidence" edge="1" parent="1" source="source" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="image-evidence" edge="1" parent="1" source="image" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="image-evidence" edge="1" parent="1" source="image" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="evidence-llm" edge="1" parent="1" source="evidence" target="llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="evidence-llm" edge="1" parent="1" source="evidence" target="llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="llm-validator" edge="1" parent="1" source="llm" target="validator" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="llm-validator" edge="1" parent="1" source="llm" target="validator" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="validator-apply" edge="1" parent="1" source="validator" target="apply" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="validator-apply" edge="1" parent="1" source="validator" target="apply" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="apply-output" edge="1" parent="1" source="apply" target="output" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="apply-output" edge="1" parent="1" source="apply" target="output" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="output-consumer" edge="1" parent="1" source="output" target="consumer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+        <mxCell id="output-consumer" edge="1" parent="1" source="output" target="consumer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
           <mxGeometry as="geometry" relative="1" />
         </mxCell>
       </root>
