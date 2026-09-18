@@ -112,7 +112,9 @@ jobs:
       - if: always()
         run: docker rm --force sca-accuracy-service-ci || true
       - name: Start evidence service with PostgreSQL
-        run: docker compose up --build --wait -d
+        run: |
+          mkdir -p workspace/evidence-acceptance out
+          docker compose up --build --wait -d
       - name: Scan six real packaging images and verify evidence API
         run: uv run python golden/evidence/verify_service.py
       - if: always()

@@ -121,6 +121,7 @@ def main():
         )
         print(json.dumps(results[-1]), flush=True)
     output = root / "out/evidence-service-acceptance.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps({"cases": results, "target_containers_executed": False}, indent=2))
 
 
