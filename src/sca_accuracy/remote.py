@@ -17,6 +17,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .evidence import persist_bundle
 from .pipeline import AnalysisConfig, run_analysis
 from .sbom import load_sbom
 
@@ -225,6 +226,7 @@ def run_remote(request: RemoteAnalysisRequest, output: Path) -> dict[str, Any]:
                         pull_image=True,
                         source=inputs / "source",
                         with_llm=request.with_llm,
+                        persist_evidence=False,
                     )
                 )
                 provenance = {
@@ -247,6 +249,7 @@ def run_remote(request: RemoteAnalysisRequest, output: Path) -> dict[str, Any]:
                 (directory / "provenance.json").write_text(
                     json.dumps(provenance, indent=2) + "\n", encoding="utf-8"
                 )
+                result["evidence_id"] = persist_bundle(directory)
                 results.append(
                     {
                         "target_id": target_id,

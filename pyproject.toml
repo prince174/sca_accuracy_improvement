@@ -12,6 +12,7 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "SCA Accuracy Improvement contributors" }]
 dependencies = [
     "packageurl-python>=0.17,<1",
+    "psycopg[binary]>=3.2,<4",
 ]
 
 [project.optional-dependencies]

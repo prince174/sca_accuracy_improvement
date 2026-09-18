@@ -10,6 +10,18 @@ permissions:
 jobs:
   python:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: sca_test
+          POSTGRES_USER: sca_test
+          POSTGRES_PASSWORD: sca_test_local
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U sca_test -d sca_test" --health-interval=5s --health-timeout=3s --health-retries=20
+    env:
+      SCA_TEST_EVIDENCE_DSN: postgresql://sca_test:sca_test_local@localhost:5432/sca_test
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.0.1

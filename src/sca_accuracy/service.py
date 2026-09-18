@@ -14,11 +14,14 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from .evidence import configured_store
+from .evidence_api import evidence_router
 from .pipeline import AnalysisConfig, run_analysis
 from .remote import RemoteAnalysisRequest, run_remote, secret, validate_request
 from .version import __version__
 
 ARTIFACTS = {
+    "analysis-context.json",
     "decisions.json",
     "sbom.original.json",
     "provenance.json",
@@ -251,6 +254,12 @@ def create_app(workspace: Path | None = None) -> FastAPI:
 
     @app.get("/ready")
     def ready(_: None = Depends(authorize)) -> dict[str, str]:
+        store = configured_store()
+        if store is not None:
+            try:
+                store.migrate()
+            except RuntimeError:
+                raise HTTPException(503, "Evidence database unavailable") from None
         return {"status": "ready", "workspace": str(manager.workspace)}
 
     @app.post("/v1/analyses", status_code=202)
@@ -282,6 +291,7 @@ def create_app(workspace: Path | None = None) -> FastAPI:
             raise HTTPException(status_code=409, detail=f"Analysis is {exc}") from exc
         return FileResponse(path)
 
+    app.include_router(evidence_router(authorize_remote))
     return app
 
 

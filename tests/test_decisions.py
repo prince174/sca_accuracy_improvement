@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from sca_accuracy.decisions import apply_plan, candidates
+from sca_accuracy.llm import LlmConfig
 from sca_accuracy.models import ComponentIdentity, Observation
 from sca_accuracy.pipeline import AnalysisConfig, run_analysis
 
@@ -117,7 +118,7 @@ def test_pipeline_model_plan_changes_real_output(tmp_path):
             return_value=("sha256:test", obs, {"artifacts": []}),
         ),
         patch("sca_accuracy.pipeline.analyze", side_effect=model),
-        patch("sca_accuracy.pipeline.LlmConfig.from_environment"),
+        patch("sca_accuracy.pipeline.LlmConfig.from_environment", return_value=LlmConfig("test")),
     ):
         result = run_analysis(config)
     output = json.loads((config.output / "sbom.enriched.json").read_text())
@@ -136,7 +137,7 @@ def test_model_defer_is_not_overridden_by_automatic_enrichment(tmp_path):
             "sca_accuracy.pipeline.inspect_image", return_value=("digest", obs, {"artifacts": []})
         ),
         patch("sca_accuracy.pipeline.analyze", return_value={"summary": "defer", "decisions": []}),
-        patch("sca_accuracy.pipeline.LlmConfig.from_environment"),
+        patch("sca_accuracy.pipeline.LlmConfig.from_environment", return_value=LlmConfig("test")),
     ):
         run_analysis(AnalysisConfig(path, "demo", tmp_path / "out", with_llm=True))
     output = json.loads((tmp_path / "out/sbom.enriched.json").read_text())

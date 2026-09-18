@@ -7,6 +7,8 @@ services:
       SCA_API_TOKEN: ${SCA_API_TOKEN:-}
       SCA_API_TOKEN_FILE: ${SCA_API_TOKEN_FILE:-}
       SCA_WORKERS: ${SCA_WORKERS:-2}
+      SCA_EVIDENCE_DSN: postgresql://sca:${SCA_POSTGRES_PASSWORD:?Set SCA_POSTGRES_PASSWORD}@evidence-db:5432/sca
+      SCA_EVIDENCE_BLOBS: /workspace/evidence-blobs
       SCA_TEAMCITY_HOSTS: ${SCA_TEAMCITY_HOSTS:-}
       SCA_BITBUCKET_HOSTS: ${SCA_BITBUCKET_HOSTS:-}
       SCA_NEXUS_HOSTS: ${SCA_NEXUS_HOSTS:-}
@@ -28,3 +30,22 @@ services:
       - ./certs:/run/sca-certs:ro
       - ./docker-config:/run/docker-auth:ro
     restart: unless-stopped
+    depends_on:
+      evidence-db:
+        condition: service_healthy
+  evidence-db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: sca
+      POSTGRES_USER: sca
+      POSTGRES_PASSWORD: ${SCA_POSTGRES_PASSWORD:?Set SCA_POSTGRES_PASSWORD}
+    volumes:
+      - evidence-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sca -d sca"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  evidence-postgres:

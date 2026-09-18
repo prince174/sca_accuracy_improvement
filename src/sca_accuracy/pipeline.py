@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,9 +8,10 @@ from typing import Any, Literal
 
 from .catalog import coverage, inspect_image, observations_from_catalog, scan
 from .decisions import apply_plan, candidates
+from .evidence import persist_bundle
 from .expectations import load_expectations, verify_expectations, verify_vex_expectations
 from .findings import load_findings
-from .llm import LlmConfig, analyze
+from .llm import SYSTEM_PROMPT, LlmConfig, analyze
 from .maven import load_dependency_tree
 from .report import write_outputs
 from .sbom import enrich_sbom, load_sbom, reconcile
@@ -31,6 +33,7 @@ class AnalysisConfig:
     vex_mode: Literal["advisory", "safe"] = "advisory"
     vulnerability_rules: Path | None = None
     vex_expectations: Path | None = None
+    persist_evidence: bool = True
 
 
 def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
@@ -103,6 +106,28 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     )
     vex_result = _write_vex(config, sbom, findings, items, digest)
     expectation_result = _write_reconciliation_expectations(config, items)
+    _write_json(
+        config.output / "analysis-context.json",
+        {
+            "with_llm": config.with_llm,
+            "model": llm_config.model if config.with_llm else None,
+            "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()
+            if config.with_llm
+            else None,
+            "analyzer_sha256": hashlib.sha256(
+                b"".join(
+                    Path(__file__).with_name(name + ".py").read_bytes()
+                    for name in ("pipeline", "sbom", "decisions", "catalog", "image", "llm")
+                )
+            ).hexdigest(),
+            "vex_mode": config.vex_mode,
+        },
+    )
+    evidence_id = (
+        persist_bundle(config.output, provenance={"image_id": digest, "image": config.image})
+        if config.persist_evidence
+        else None
+    )
     return {
         "output": str(config.output.resolve()),
         "image_digest": digest,
@@ -113,6 +138,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         "dependency_tree": str(dependency_tree) if dependency_tree else None,
         "decision_mode": "model_validated" if config.with_llm else "rules",
         "changes_applied": len(decision_audit["accepted"]) if decision_audit else 0,
+        "evidence_id": evidence_id,
     }
 
 
