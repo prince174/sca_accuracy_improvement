@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS evidence_labels (
 """
 
 FILES = {
+    "model-request.json",
+    "model-response.json",
     "sbom.original.json",
     "sbom.enriched.json",
     "inventory.json",

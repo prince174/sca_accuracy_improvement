@@ -393,6 +393,7 @@ uv run python golden/model/verify.py --live --output out/model-live.json
 ## Разработка и проверки
 
 Постоянная база наблюдений и разметки: [PostgreSQL evidence store](docs/evidence.md).
+Расширенное сравнение одинаковых возможностей: [генератор 588 случаев](docs/benchmark.md).
 Compose запускает PostgreSQL; задайте `SCA_POSTGRES_PASSWORD` в `.env`.
 Сервис возвращает `evidence_id` и предоставляет поиск и разметку через `/v2/evidence`.
 
