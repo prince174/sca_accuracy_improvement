@@ -14,6 +14,7 @@ from .findings import load_findings
 from .llm import SYSTEM_PROMPT, LlmConfig, analyze
 from .maven import load_dependency_tree
 from .report import write_outputs
+from .retrieval import configured_history
 from .sbom import enrich_sbom, load_sbom, reconcile
 from .vex import build_vex
 from .vulnerability_rules import load_vulnerability_rules
@@ -77,6 +78,10 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     corrected = sbom
     if config.with_llm:
         llm_config = LlmConfig.from_environment()
+        offered = candidates(sbom, observations)
+        history = configured_history(offered, digest)
+        if history is not None:
+            _write_json(config.output / "retrieved-evidence.json", history)
         llm_analysis = analyze(
             {
                 "image": config.image,
@@ -85,7 +90,8 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                 "findings": [finding.to_dict() for finding in findings],
                 "coverage": coverage(image_catalog, source_catalog),
                 "source_evidence": [item.to_dict() for item in source_items],
-                "candidates": candidates(sbom, observations),
+                "candidates": offered,
+                **({"reviewed_history": history} if history is not None else {}),
             },
             llm_config,
         )
@@ -119,7 +125,15 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
             "analyzer_sha256": hashlib.sha256(
                 b"".join(
                     Path(__file__).with_name(name + ".py").read_bytes()
-                    for name in ("pipeline", "sbom", "decisions", "catalog", "image", "llm")
+                    for name in (
+                        "pipeline",
+                        "sbom",
+                        "decisions",
+                        "catalog",
+                        "image",
+                        "llm",
+                        "retrieval",
+                    )
                 )
             ).hexdigest(),
             "vex_mode": config.vex_mode,
