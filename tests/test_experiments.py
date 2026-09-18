@@ -56,3 +56,16 @@ def test_omission_audit_counts_delta_not_all_deferrals():
         ]
     }
     assert omission_audit(report)["extra_fn"] == 1
+
+
+def test_checkpoint_compares_json_values_not_python_tuple_representation(tmp_path, monkeypatch):
+    calls = []
+
+    def fake(payload, config, *, prompt):
+        calls.append(1)
+        return {"decisions": []}
+
+    monkeypatch.setattr("sca_accuracy.experiments.analyze", fake)
+    cached_call(tmp_path, {"qualifiers": (("arch", "x64"),)}, LlmConfig("key"))
+    cached_call(tmp_path, {"qualifiers": [["arch", "x64"]]}, LlmConfig("key"))
+    assert len(calls) == 1

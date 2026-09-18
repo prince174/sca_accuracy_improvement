@@ -71,6 +71,8 @@ jobs:
             --vex-expectations golden/expected-vex-states.json
       - name: Verify multi-ecosystem image and source fixture
         run: uv run python golden/universal/verify.py
+      - name: Verify code and metadata mismatches using real Syft scans
+        run: uv run python golden/evidence/verify_contradictions.py
       - name: Validate CycloneDX VEX
         run: |
           docker run --rm \

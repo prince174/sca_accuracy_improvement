@@ -241,6 +241,7 @@ def prepare(case):
         "source_evidence": case["source_evidence"],
         "coverage": {"absence_proven": False, "runtime_execution": False},
         **({"artifact_evidence": case["artifact_evidence"]} if "artifact_evidence" in case else {}),
+        **({"inventory_policy": case["inventory_policy"]} if "inventory_policy" in case else {}),
     }
     return legacy, allowed, audit, payload
 

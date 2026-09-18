@@ -39,7 +39,7 @@ def cached_call(output, payload, config, prompt=SYSTEM_PROMPT):
     path = output / "responses" / (key + ".json")
     if path.exists():
         cached = json.loads(path.read_bytes())
-        if cached.get("request") != identity:
+        if checksum(cached.get("request")) != key:
             raise ValueError("Checkpoint request mismatch")
         return cached["response"]
     response = analyze(payload, config, prompt=prompt)

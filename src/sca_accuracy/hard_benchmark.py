@@ -15,10 +15,13 @@ from .benchmark import (
     aggregate,
     evaluate_case,
     make_case,
+    metrics,
+    observations,
     prepare,
     save_bundle,
     write_json,
 )
+from .decisions import apply_plan
 from .evidence import checksum, configured_store
 from .experiments import CLARIFIED_PROMPT, cached_call
 from .llm import LlmConfig
@@ -35,6 +38,49 @@ FAMILIES = (
     "path_injection",
 )
 REVIEWER = "fixture-constructor-v2"
+INVENTORY_POLICY = (
+    "Inventory code-bearing delivered packages. An orphan metadata record without package code "
+    "is not a delivered code component. Metadata/payload version contradictions need review. "
+    "Absence of scanner detections never authorizes removal. This policy is specific to the experiment."
+)
+
+
+def evidence_rules(case):
+    """Same file facts as the model; defer additions with explicit payload contradictions."""
+    package_facts = case.get("artifact_evidence", {}).get("packages", [])
+    plan = []
+    for candidate in prepare(case)[3]["candidates"]:
+        contradicted = []
+        for obs in candidate["evidence"]:
+            matches = [
+                f
+                for f in package_facts
+                if obs["location"] == f["location"]
+                or obs["location"].startswith(f["location"].rstrip("/") + "/")
+            ]
+            contradicted.append(
+                any(
+                    (
+                        f.get("file_listing_complete_under_package_root") is True
+                        and f.get("payload_files") == []
+                    )
+                    or (
+                        f.get("payload_version_marker")
+                        and f.get("metadata_version")
+                        and f["payload_version_marker"] != f["metadata_version"]
+                    )
+                    for f in matches
+                )
+            )
+        plan.append(
+            {
+                "candidate_id": candidate["id"],
+                "action": "defer" if contradicted and all(contradicted) else "apply",
+                "reason": "same-input static file evidence baseline",
+            }
+        )
+    result, _audit = apply_plan(case["sbom"], observations(case), plan)
+    return metrics(result, case["expected_purls"])
 
 
 def hard_case(ecosystem, family, variant):
@@ -51,6 +97,7 @@ def hard_case(ecosystem, family, variant):
         truth_source="controlled hard-case constructor; no real scanner invoked",
     )
     case["evaluation_group"] = family
+    case["inventory_policy"] = INVENTORY_POLICY
     evidence = []
     for obs in case["observations"]:
         obs["source"] = f"fixture-cataloger:{ecosystem}"
@@ -226,7 +273,12 @@ def run(args):
                 else {"summary": "No candidates", "hypotheses": [], "warnings": [], "decisions": []}
             )
             row = evaluate_case(case, response)
-            row.update(arm=arm, called=called, transport=response.get("_transport"))
+            row.update(
+                arm=arm,
+                called=called,
+                transport=response.get("_transport"),
+                evidence_rules=evidence_rules(case),
+            )
             bundle = args.output / "results" / arm / case["id"]
             save_bundle(bundle, case, row, response, design)
             write_json(bundle / "model-request.json", payload)
@@ -265,14 +317,14 @@ def run(args):
         "paired": {
             a: aggregate(
                 [r for r in rows if r["arm"] == a and r["case_id"] in complete],
-                ("allowed_rules", "model"),
+                ("allowed_rules", "evidence_rules", "model"),
             )
             for a in arms
         },
         "called_pairs": {
             a: aggregate(
                 [r for r in rows if r["arm"] == a and r["case_id"] in complete and r["called"]],
-                ("allowed_rules", "model"),
+                ("allowed_rules", "evidence_rules", "model"),
             )
             for a in arms
         },

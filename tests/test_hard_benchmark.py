@@ -1,7 +1,7 @@
 import json
 
 from sca_accuracy.benchmark import evaluate_case, prepare
-from sca_accuracy.hard_benchmark import dataset, hard_case
+from sca_accuracy.hard_benchmark import dataset, evidence_rules, hard_case
 
 
 def test_hard_corpus_covers_ecosystems_and_strong_false_observations():
@@ -33,3 +33,16 @@ def test_missing_metadata_never_turns_into_invented_candidate():
         case = hard_case("maven", family, 1)
         assert prepare(case)[3]["candidates"] == []
         assert evaluate_case(case)["allowed_rules"]["fn"] == 1
+
+
+def test_same_input_rules_require_explicit_contradictions_at_all_locations():
+    orphan = hard_case("npm", "orphan_metadata", 1)
+    assert evidence_rules(orphan)["fp"] == 0
+    orphan["artifact_evidence"]["packages"][0]["file_listing_complete_under_package_root"] = False
+    assert evidence_rules(orphan)["fp"] == 1
+    stale = hard_case("npm", "stale_version", 1)
+    assert evidence_rules(stale)["fp"] == 0
+    assert evidence_rules(stale)["fn"] == 1
+    assert evidence_rules(hard_case("npm", "source_drift", 1))["fn"] == 0
+    for family in ("installed", "multiple_versions", "path_injection"):
+        assert evidence_rules(hard_case("npm", family, 1))["fn"] == 0
