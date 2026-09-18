@@ -57,6 +57,13 @@ uv run --env-file .env python -m sca_accuracy.evidence_cli out/example --kind sy
 
 ## Эксплуатация и проверки
 
+Для локальных образов-fixture API v1 принимает `evidence_kind: synthetic`.
+Это маркировка происхождения от вызывающего, не доказательство доверенности данных.
+Проверка шести реальных scratch-образов с искусственными metadata через HTTP:
+`uv run --env-file .env python golden/evidence/verify_service.py`.
+Задайте `SCA_SERVICE_URL`, если сервис слушает не `http://127.0.0.1:18087`.
+Целевые контейнеры не запускаются; проверяются каталог Syft, запись в БД и байты файлов.
+
 Бэкапировать нужно согласованную пару: PostgreSQL и каталог evidence-blobs.
 База не хранит образы целиком, только evidence; образ можно получить повторно по digest,
 пока он есть в registry. После сбоя транзакции могут остаться непривязанные blobs;

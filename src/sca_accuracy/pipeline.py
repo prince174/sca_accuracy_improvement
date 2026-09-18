@@ -34,6 +34,7 @@ class AnalysisConfig:
     vulnerability_rules: Path | None = None
     vex_expectations: Path | None = None
     persist_evidence: bool = True
+    evidence_kind: Literal["build", "synthetic"] = "build"
 
 
 def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
@@ -124,7 +125,11 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         },
     )
     evidence_id = (
-        persist_bundle(config.output, provenance={"image_id": digest, "image": config.image})
+        persist_bundle(
+            config.output,
+            kind=config.evidence_kind,
+            provenance={"image_id": digest, "image": config.image},
+        )
         if config.persist_evidence
         else None
     )

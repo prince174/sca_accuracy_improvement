@@ -47,6 +47,7 @@ class AnalysisRequest(BaseModel):
     vulnerability_rules_path: str | None = None
     with_llm: bool = False
     vex_mode: Literal["advisory", "safe"] = "advisory"
+    evidence_kind: Literal["build", "synthetic"] = "build"
 
 
 @dataclass(slots=True)
@@ -82,6 +83,7 @@ class JobManager:
             vulnerability_rules=self.resolve_optional(request.vulnerability_rules_path),
             with_llm=request.with_llm,
             vex_mode=request.vex_mode,
+            evidence_kind=request.evidence_kind,
         )
         with self._lock:
             self._jobs[job.id] = job

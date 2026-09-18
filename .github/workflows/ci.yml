@@ -85,8 +85,13 @@ jobs:
 
   service:
     runs-on: ubuntu-latest
+    env:
+      SCA_POSTGRES_PASSWORD: ci-local-evidence
+      SCA_API_TOKEN: ci-local-api
+      SCA_PORT: "18087"
     steps:
       - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
       - run: docker build --tag sca-accuracy-service:ci .
       - name: Start service and wait for healthcheck
         run: |
@@ -106,3 +111,9 @@ jobs:
           exit 1
       - if: always()
         run: docker rm --force sca-accuracy-service-ci || true
+      - name: Start evidence service with PostgreSQL
+        run: docker compose up --build --wait -d
+      - name: Scan six real packaging images and verify evidence API
+        run: uv run python golden/evidence/verify_service.py
+      - if: always()
+        run: docker compose down
