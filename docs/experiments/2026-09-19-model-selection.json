@@ -1,0 +1,393 @@
+{
+  "ablation": {
+    "complete_pairs": 5,
+    "failures": [
+      {
+        "arm": "thinking",
+        "case_id": "maven-ambiguous_hash-000",
+        "error": "RuntimeError"
+      },
+      {
+        "arm": "thinking",
+        "case_id": "npm-untrusted_metadata-000",
+        "error": "RuntimeError"
+      },
+      {
+        "arm": "thinking",
+        "case_id": "npm-mixed-000",
+        "error": "RuntimeError"
+      }
+    ],
+    "paired": {
+      "baseline": {
+        "allowed_rules": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        },
+        "model": {
+          "cases": 5,
+          "fn": 3,
+          "fp": 3,
+          "precision": 0.4,
+          "recall": 0.4,
+          "tp": 2,
+          "unresolved": 1
+        }
+      },
+      "clarified_prompt": {
+        "allowed_rules": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        },
+        "model": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        }
+      },
+      "neutral_label": {
+        "allowed_rules": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        },
+        "model": {
+          "cases": 5,
+          "fn": 1,
+          "fp": 3,
+          "precision": 0.5714285714285714,
+          "recall": 0.8,
+          "tp": 4,
+          "unresolved": 1
+        }
+      },
+      "pro": {
+        "allowed_rules": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        },
+        "model": {
+          "cases": 5,
+          "fn": 1,
+          "fp": 3,
+          "precision": 0.5714285714285714,
+          "recall": 0.8,
+          "tp": 4,
+          "unresolved": 1
+        }
+      },
+      "thinking": {
+        "allowed_rules": {
+          "cases": 5,
+          "fn": 0,
+          "fp": 3,
+          "precision": 0.625,
+          "recall": 1.0,
+          "tp": 5,
+          "unresolved": 1
+        },
+        "model": {
+          "cases": 5,
+          "fn": 2,
+          "fp": 3,
+          "precision": 0.5,
+          "recall": 0.6,
+          "tp": 3,
+          "unresolved": 1
+        }
+      }
+    }
+  },
+  "ablation_performance": {
+    "baseline": {
+      "successful_calls": 8,
+      "median_seconds": 4.429,
+      "p95_seconds": 5.344,
+      "tokens": 12322,
+      "reported_models": {
+        "deepseek-flash": 8
+      }
+    },
+    "neutral_label": {
+      "successful_calls": 8,
+      "median_seconds": 4.5,
+      "p95_seconds": 5.547,
+      "tokens": 12174,
+      "reported_models": {
+        "deepseek-flash": 8
+      }
+    },
+    "clarified_prompt": {
+      "successful_calls": 8,
+      "median_seconds": 4.462,
+      "p95_seconds": 5.5,
+      "tokens": 13180,
+      "reported_models": {
+        "deepseek-flash": 8
+      }
+    },
+    "thinking": {
+      "successful_calls": 5,
+      "median_seconds": 10.172,
+      "p95_seconds": 13.39,
+      "tokens": 13710,
+      "reported_models": {
+        "deepseek-flash": 5
+      }
+    },
+    "pro": {
+      "successful_calls": 8,
+      "median_seconds": 5.601,
+      "p95_seconds": 7.094,
+      "tokens": 9847,
+      "reported_models": {
+        "deepseek-v4-pro": 8
+      }
+    }
+  },
+  "hard": {
+    "called_pairs": {
+      "model": {
+        "allowed_rules": {
+          "cases": 72,
+          "fn": 12,
+          "fp": 24,
+          "precision": 0.7142857142857143,
+          "recall": 0.8333333333333334,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "evidence_rules": {
+          "cases": 72,
+          "fn": 12,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "model": {
+          "cases": 72,
+          "fn": 22,
+          "fp": 1,
+          "precision": 0.9803921568627451,
+          "recall": 0.6944444444444444,
+          "tp": 50,
+          "unresolved": 0
+        }
+      },
+      "model_history": {
+        "allowed_rules": {
+          "cases": 72,
+          "fn": 12,
+          "fp": 24,
+          "precision": 0.7142857142857143,
+          "recall": 0.8333333333333334,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "evidence_rules": {
+          "cases": 72,
+          "fn": 12,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "model": {
+          "cases": 72,
+          "fn": 12,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "tp": 60,
+          "unresolved": 0
+        }
+      }
+    },
+    "failures": [],
+    "offline_all": {
+      "allowed_rules": {
+        "cases": 194,
+        "fn": 74,
+        "fp": 48,
+        "precision": 0.7142857142857143,
+        "recall": 0.6185567010309279,
+        "tp": 120,
+        "unresolved": 0
+      },
+      "input": {
+        "cases": 194,
+        "fn": 170,
+        "fp": 0,
+        "precision": 1.0,
+        "recall": 0.12371134020618557,
+        "tp": 24,
+        "unresolved": 0
+      }
+    },
+    "paired": {
+      "model": {
+        "allowed_rules": {
+          "cases": 97,
+          "fn": 37,
+          "fp": 24,
+          "precision": 0.7142857142857143,
+          "recall": 0.6185567010309279,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "evidence_rules": {
+          "cases": 97,
+          "fn": 37,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.6185567010309279,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "model": {
+          "cases": 97,
+          "fn": 47,
+          "fp": 1,
+          "precision": 0.9803921568627451,
+          "recall": 0.5154639175257731,
+          "tp": 50,
+          "unresolved": 0
+        }
+      },
+      "model_history": {
+        "allowed_rules": {
+          "cases": 97,
+          "fn": 37,
+          "fp": 24,
+          "precision": 0.7142857142857143,
+          "recall": 0.6185567010309279,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "evidence_rules": {
+          "cases": 97,
+          "fn": 37,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.6185567010309279,
+          "tp": 60,
+          "unresolved": 0
+        },
+        "model": {
+          "cases": 97,
+          "fn": 37,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.6185567010309279,
+          "tp": 60,
+          "unresolved": 0
+        }
+      }
+    }
+  },
+  "hard_performance": {
+    "model": {
+      "successful_calls": 72,
+      "median_seconds": 4.969,
+      "p95_seconds": 6.078,
+      "tokens": 128368,
+      "reported_models": {
+        "deepseek-flash": 72
+      }
+    },
+    "model_history": {
+      "successful_calls": 72,
+      "median_seconds": 5.038,
+      "p95_seconds": 6.156,
+      "tokens": 269995,
+      "reported_models": {
+        "deepseek-flash": 72
+      }
+    }
+  },
+  "real": {
+    "allowed_rules": {
+      "cases": 8,
+      "fn": 3,
+      "fp": 4,
+      "precision": 0.5,
+      "recall": 0.5714285714285714,
+      "tp": 4,
+      "unresolved": 0
+    },
+    "evidence_rules": {
+      "cases": 8,
+      "fn": 3,
+      "fp": 1,
+      "precision": 0.8,
+      "recall": 0.5714285714285714,
+      "tp": 4,
+      "unresolved": 0
+    },
+    "model": {
+      "cases": 8,
+      "fn": 3,
+      "fp": 2,
+      "precision": 0.6666666666666666,
+      "recall": 0.5714285714285714,
+      "tp": 4,
+      "unresolved": 0
+    }
+  },
+  "real_performance": {
+    "model": {
+      "successful_calls": 6,
+      "median_seconds": 5.196,
+      "p95_seconds": 6.156,
+      "tokens": 11806,
+      "reported_models": {
+        "deepseek-flash": 6
+      }
+    }
+  },
+  "report_sha256": {
+    "out/ablation-v1/report.json": "b6ba78170b83c283696da4b6c18a748b1159dab177615801d78d88d82503eda2",
+    "out/hard-benchmark-v2/report.json": "6cc34751f8d2ee800b833f9dd76726d2a8bb779bace472a94d574f42d58e2e30",
+    "out/contradictions-real/report.json": "1ca2fb309a47c8a0318105e4ad753284ac04cd36d700870acf0be3ceac356f36"
+  },
+  "storage": {
+    "evidence_runs": 1063,
+    "evidence_observations": 2718,
+    "evidence_artifacts": 12780,
+    "evidence_labels": 168
+  },
+  "label_reviewers": [
+    {
+      "reviewer": "fixture-constructor-v2",
+      "count": 168
+    }
+  ],
+  "verified_unique_blobs": 5821,
+  "heldout_history_verified": true
+}
