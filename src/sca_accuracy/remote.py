@@ -33,7 +33,7 @@ class RemoteAnalysisRequest(BaseModel):
     repository_url: str = Field(min_length=1, max_length=2048)
     commit: str = Field(pattern=r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
     targets: list[BuildTarget] = Field(min_length=1, max_length=16)
-    with_llm: bool = False
+    with_llm: bool = True
 
     @model_validator(mode="after")
     def unique_targets(self) -> RemoteAnalysisRequest:

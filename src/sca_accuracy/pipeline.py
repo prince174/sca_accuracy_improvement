@@ -72,6 +72,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     decision_audit = None
     corrected = sbom
     if config.with_llm:
+        llm_config = LlmConfig.from_environment()
         llm_analysis = analyze(
             {
                 "image": config.image,
@@ -82,7 +83,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                 "source_evidence": [item.to_dict() for item in source_items],
                 "candidates": candidates(sbom, observations),
             },
-            LlmConfig.from_environment(),
+            llm_config,
         )
         corrected, decision_audit = apply_plan(sbom, observations, llm_analysis["decisions"])
         _write_json(config.output / "decisions.json", decision_audit)

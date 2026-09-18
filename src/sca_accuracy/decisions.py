@@ -90,6 +90,7 @@ def apply_plan(
             or not isinstance(reason, str)
             or not reason.strip()
             or len(reason) > 4000
+            or not isinstance(decision.get("action"), str)
             or decision.get("action") not in {"apply", "defer"}
             or cid in seen
         ):

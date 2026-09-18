@@ -1,173 +1,81 @@
 <?xml version='1.0' encoding='utf-8'?>
-<mxfile host="app.diagrams.net" type="device" version="24.7.17">
-  <diagram id="sca-workflow" name="Работа системы">
-    <mxGraphModel dx="1800" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="sca-workflow" name="Модель и проверка">
+    <mxGraphModel page="1" pageWidth="1600" pageHeight="1500">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" value="&lt;b&gt;SCA Accuracy Improvement&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:20px&quot;&gt;Ссылки на артефакты → проверка состава → обновлённый SBOM для каждого образа&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=none;fontColor=#172B4D;fontFamily=Arial;fontSize=25;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="20" width="1720" height="75" as="geometry" />
+        <mxCell id="title" value="&lt;b&gt;SCA Accuracy Improvement&lt;/b&gt;&lt;br&gt;Модель выбирает изменения — код проверяет доказательства" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="40" y="20" width="1500" height="90" />
         </mxCell>
-        <mxCell id="boundary" value="&lt;b&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F0F7FF;strokeColor=#93B4D7;fontColor=#172B4D;fontFamily=Arial;fontSize=19;spacing=15;align=left;verticalAlign=middle;verticalAlign=top;" vertex="1" parent="1">
-          <mxGeometry x="400" y="100" width="980" height="1045" as="geometry" />
+        <mxCell id="request" value="Pipeline → HTTP API v2&lt;br&gt;SBOM URL · image references · Bitbucket URL · commit" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="150" width="540" height="95" />
         </mxCell>
-        <mxCell id="boundarylabel" value="&lt;b&gt;СЕРВИС НА LINUX · анализ без запуска целевого контейнера&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F0F7FF;strokeColor=none;fontColor=#172B4D;fontFamily=Arial;fontSize=20;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="430" y="290" width="900" height="45" as="geometry" />
+        <mxCell id="sbom" value="TeamCity&lt;br&gt;Исходный CycloneDX SBOM" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="70" y="285" width="420" height="95" />
         </mxCell>
-        <mxCell id="request" value="&lt;b&gt;Внешний pipeline&lt;/b&gt;&lt;br&gt;&lt;br&gt;URL SBOM + образы Nexus&lt;br&gt;Bitbucket URL + точный commit" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EDE9FE;strokeColor=#A78BFA;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="120" width="340" height="135" as="geometry" />
+        <mxCell id="source" value="Bitbucket checkout&lt;br&gt;Syft: манифесты и lock-файлы" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="570" y="285" width="420" height="95" />
         </mxCell>
-        <mxCell id="api" value="&lt;b&gt;1. HTTP API · POST /v2/analyses&lt;/b&gt;&lt;br&gt;&lt;br&gt;Авторизация → проверка hosts и commit → явные группы SBOM / images" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DBEAFE;strokeColor=#60A5FA;fontColor=#172B4D;fontFamily=Arial;fontSize=19;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="440" y="120" width="880" height="115" as="geometry" />
+        <mxCell id="image" value="Nexus → image ID → archive&lt;br&gt;Syft + Java: metadata, пути, SHA-256" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="1070" y="285" width="420" height="95" />
         </mxCell>
-        <mxCell id="job" value="&lt;b&gt;Задание и состояние&lt;/b&gt;&lt;br&gt;&lt;br&gt;UUID · queued → running&lt;br&gt;→ succeeded / failed&lt;br&gt;GET /v2/analyses/{id}" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EDE9FE;strokeColor=#A78BFA;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1420" y="120" width="340" height="135" as="geometry" />
+        <mxCell id="evidence" value="Сопоставление и кандидаты изменений&lt;br&gt;SBOM ↔ образ; SBOM ↔ исходники" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="425" width="540" height="95" />
         </mxCell>
-        <mxCell id="tc" value="&lt;b&gt;TeamCity&lt;/b&gt;&lt;br&gt;&lt;br&gt;Один или несколько&lt;br&gt;sbom.json из билдов" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#172B4D;fontFamily=Arial;fontSize=19;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="355" width="300" height="115" as="geometry" />
+        <mxCell id="llm" value="&lt;b&gt;Модель: apply / defer + основание&lt;/b&gt;&lt;br&gt;DeepSeek API или локальный endpoint" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="560" width="540" height="95" />
         </mxCell>
-        <mxCell id="bb" value="&lt;b&gt;Bitbucket&lt;/b&gt;&lt;br&gt;&lt;br&gt;HTTPS clone URL&lt;br&gt;Полный hash commit" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#172B4D;fontFamily=Arial;fontSize=19;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="540" width="300" height="115" as="geometry" />
+        <mxCell id="validator" value="&lt;b&gt;Независимая проверка&lt;/b&gt;&lt;br&gt;ID кандидата · сильная metadata · однозначный SHA-256" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="695" width="540" height="95" />
         </mxCell>
-        <mxCell id="nx" value="&lt;b&gt;Nexus registry&lt;/b&gt;&lt;br&gt;&lt;br&gt;Один или несколько образов&lt;br&gt;Предпочтительно по digest" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F1F5F9;strokeColor=#CBD5E1;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="765" width="300" height="115" as="geometry" />
+        <mxCell id="apply" value="Применить add / replace_identity&lt;br&gt;Повторная сверка и обогащение SBOM" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="830" width="540" height="95" />
         </mxCell>
-        <mxCell id="download" value="&lt;b&gt;2. Скачать SBOM&lt;/b&gt;&lt;br&gt;&lt;br&gt;HTTPS · проверка JSON&lt;br&gt;SHA-256 исходного файла" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#93B4D7;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="440" y="355" width="270" height="115" as="geometry" />
+        <mxCell id="output" value="sbom.enriched.json + sbom.original.json&lt;br&gt;decisions.json + assessment.json + provenance" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="965" width="540" height="95" />
         </mxCell>
-        <mxCell id="declared" value="&lt;b&gt;Заявленные компоненты&lt;/b&gt;&lt;br&gt;&lt;br&gt;Общие идентификаторы Package URL:&lt;br&gt;экосистема · имя · версия · qualifiers" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#93B4D7;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="760" y="355" width="570" height="115" as="geometry" />
+        <mxCell id="consumer" value="Внешний pipeline получает результат&lt;br&gt;Обновляет проект в Dependency-Track" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="500" y="1100" width="540" height="95" />
         </mxCell>
-        <mxCell id="checkout" value="&lt;b&gt;3. Получить исходники&lt;/b&gt;&lt;br&gt;&lt;br&gt;Git fetch / checkout&lt;br&gt;Сверить HEAD с commit" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#93B4D7;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="440" y="540" width="270" height="115" as="geometry" />
+        <mxCell id="limits" value="&lt;b&gt;Границы решений&lt;/b&gt;&lt;br&gt;&lt;br&gt;Необнаружение ≠ отсутствие.&lt;br&gt;Удаление по одному scan miss запрещено.&lt;br&gt;CVE не подавляются.&lt;br&gt;Контейнер не запускается.&lt;br&gt;&lt;br&gt;Замена по SHA-256 сейчас: Java.&lt;br&gt;Добавления: все поддержанные экосистемы." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="1090" y="560" width="400" height="350" />
         </mxCell>
-        <mxCell id="source" value="&lt;b&gt;Syft: исходники&lt;/b&gt;&lt;br&gt;&lt;br&gt;Манифесты и lock-файлы&lt;br&gt;Без запуска сборщиков" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#CCFBF1;strokeColor=#2DD4BF;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="760" y="540" width="250" height="115" as="geometry" />
+        <mxCell id="mode" value="&lt;b&gt;Режимы&lt;/b&gt;&lt;br&gt;&lt;br&gt;API v2: with_llm=true по умолчанию.&lt;br&gt;false: обогащение правилами без модели.&lt;br&gt;&lt;br&gt;Ошибка модели → failed.&lt;br&gt;Без скрытого fallback." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+          <mxGeometry as="geometry" x="60" y="560" width="380" height="280" />
         </mxCell>
-        <mxCell id="sourcecompare" value="&lt;b&gt;SBOM ↔ исходники&lt;/b&gt;&lt;br&gt;&lt;br&gt;Отдельное сравнение&lt;br&gt;Декларации проекта" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DBEAFE;strokeColor=#60A5FA;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1080" y="540" width="250" height="115" as="geometry" />
+        <mxCell id="request-sbom" edge="1" parent="1" source="request" target="sbom" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="save" value="&lt;b&gt;4. Получить образ&lt;/b&gt;&lt;br&gt;&lt;br&gt;Pull → закрепить image ID&lt;br&gt;→ docker image save" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#93B4D7;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="440" y="765" width="270" height="115" as="geometry" />
+        <mxCell id="request-source" edge="1" parent="1" source="request" target="source" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="image" value="&lt;b&gt;Syft: образ&lt;/b&gt;&lt;br&gt;&lt;br&gt;Итоговый состав слоёв&lt;br&gt;Пакеты и их расположение" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#CCFBF1;strokeColor=#2DD4BF;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="760" y="765" width="250" height="115" as="geometry" />
+        <mxCell id="request-image" edge="1" parent="1" source="request" target="image" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="compare" value="&lt;b&gt;SBOM ↔ образ&lt;/b&gt;&lt;br&gt;&lt;br&gt;Совпадение / нет данных&lt;br&gt;Новая или другая версия" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DBEAFE;strokeColor=#60A5FA;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1080" y="765" width="250" height="115" as="geometry" />
+        <mxCell id="sbom-evidence" edge="1" parent="1" source="sbom" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="java" value="&lt;b&gt;Java: дополнительные статические ссылки на методы&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#E0F2FE;strokeColor=#7DD3FC;fontColor=#172B4D;fontFamily=Arial;fontSize=17;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="760" y="905" width="570" height="60" as="geometry" />
+        <mxCell id="source-evidence" edge="1" parent="1" source="source" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="output" value="&lt;b&gt;5. Результат для каждой пары SBOM / образ&lt;/b&gt;&lt;br&gt;&lt;br&gt;sbom.enriched.json + отчёты + provenance&lt;br&gt;Commit · SHA-256 SBOM · фактический image ID" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DCFCE7;strokeColor=#4ADE80;fontColor=#172B4D;fontFamily=Arial;fontSize=19;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="760" y="1010" width="570" height="110" as="geometry" />
+        <mxCell id="image-evidence" edge="1" parent="1" source="image" target="evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="llm" value="&lt;b&gt;Опциональная LLM&lt;/b&gt;&lt;br&gt;&lt;br&gt;DeepSeek API / локальная модель&lt;br&gt;&lt;br&gt;Объясняет расхождения.&lt;br&gt;Не меняет статусы компонентов." style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FEF3C7;strokeColor=#FBBF24;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1430" y="740" width="330" height="145" as="geometry" />
+        <mxCell id="evidence-llm" edge="1" parent="1" source="evidence" target="llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="consumer" value="&lt;b&gt;6. Внешний pipeline&lt;/b&gt;&lt;br&gt;&lt;br&gt;После succeeded скачивает&lt;br&gt;обновлённые SBOM по HTTP" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#EDE9FE;strokeColor=#A78BFA;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1430" y="1010" width="330" height="110" as="geometry" />
+        <mxCell id="llm-validator" edge="1" parent="1" source="llm" target="validator" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="dt" value="&lt;b&gt;Dependency-Track&lt;/b&gt;&lt;br&gt;&lt;br&gt;Обновляется внешним pipeline" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#DCFCE7;strokeColor=#4ADE80;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1430" y="1200" width="330" height="100" as="geometry" />
+        <mxCell id="validator-apply" edge="1" parent="1" source="validator" target="apply" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="limits" value="&lt;b&gt;Границы текущей реализации&lt;/b&gt;&lt;br&gt;&lt;br&gt;Исходные компоненты не удаляются. Отсутствие обнаружения ≠ доказанное отсутствие.&lt;br&gt;Сервис не вызывает Dependency-Track и не подавляет уязвимости автоматически." style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFF7ED;strokeColor=#FDBA74;fontColor=#172B4D;fontFamily=Arial;fontSize=18;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="400" y="1190" width="970" height="110" as="geometry" />
+        <mxCell id="apply-output" edge="1" parent="1" source="apply" target="output" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
-        <mxCell id="legend" value="&lt;b&gt;Чтение схемы&lt;/b&gt;&lt;br&gt;&lt;br&gt;Сплошные стрелки — основной поток.&lt;br&gt;Пунктир — дополнительные сведения." style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#F8FAFC;strokeColor=none;fontColor=#172B4D;fontFamily=Arial;fontSize=16;spacing=15;align=left;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1165" width="300" height="135" as="geometry" />
-        </mxCell>
-        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="request" target="api">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="api" target="job">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=0.98;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="api" target="download">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1302" y="340" />
-              <mxPoint x="575" y="340" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="tc" target="download">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="download" target="declared">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="bb" target="checkout">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="checkout" target="source">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="source" target="sourcecompare">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=0.78;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="declared" target="sourcecompare">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="declared" target="compare">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1355" y="412" />
-              <mxPoint x="1355" y="720" />
-              <mxPoint x="1205" y="720" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="nx" target="save">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="save" target="image">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="image" target="compare">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0.93;entryY=0;" edge="1" parent="1" source="sourcecompare" target="output">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1360" y="597" />
-              <mxPoint x="1360" y="980" />
-              <mxPoint x="1290" y="980" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0.8;entryY=0;" edge="1" parent="1" source="compare" target="output">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1340" y="822" />
-              <mxPoint x="1340" y="990" />
-              <mxPoint x="1215" y="990" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;dashed=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="save" target="java">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="575" y="935" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;dashed=1;exitX=0.35;exitY=1;entryX=0.35;entryY=0;" edge="1" parent="1" source="java" target="output">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e18" value="Факты / объяснение" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;dashed=1;startArrow=block;startFill=1;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="output" target="llm">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1405" y="1065" />
-              <mxPoint x="1405" y="812" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.75;entryX=0;entryY=0.75;" edge="1" parent="1" source="output" target="consumer">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e20" value="Загрузка в нужный project / version" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#64748B;strokeWidth=2;fontFamily=Arial;fontSize=16;fontColor=#334155;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="consumer" target="dt">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="output-consumer" edge="1" parent="1" source="output" target="consumer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;strokeWidth=2;">
+          <mxGeometry as="geometry" relative="1" />
         </mxCell>
       </root>
     </mxGraphModel>

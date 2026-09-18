@@ -13,5 +13,5 @@
       "images": ["nexus.xxx/team/frontend:build-12345", "nexus.xxx/team/frontend-debug:build-12345"]
     }
   ],
-  "with_llm": false
+  "with_llm": true
 }
