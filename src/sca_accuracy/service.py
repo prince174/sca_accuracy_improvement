@@ -15,9 +15,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .pipeline import AnalysisConfig, run_analysis
+from .remote import RemoteAnalysisRequest, run_remote, secret, validate_request
 from .version import __version__
 
 ARTIFACTS = {
+    "provenance.json",
     "assessment.json",
     "coverage.json",
     "source-assessment.json",
@@ -88,6 +90,38 @@ class JobManager:
             if job is None:
                 raise KeyError(job_id)
             return Job(**asdict(job))
+
+    def submit_remote(self, request: RemoteAnalysisRequest) -> Job:
+        validate_request(request)
+        job = Job(str(uuid.uuid4()))
+        with self._lock:
+            self._jobs[job.id] = job
+            self._save(job)
+        self._executor.submit(self._execute_remote, job.id, request)
+        return job
+
+    def _execute_remote(self, job_id: str, request: RemoteAnalysisRequest) -> None:
+        self._update(job_id, status="running")
+        try:
+            result = run_remote(request, self.results / job_id)
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
+            self._update(job_id, status="failed", error=f"{type(exc).__name__}: {exc}")
+        else:
+            self._update(job_id, status="succeeded", result=result)
+
+    def remote_artifact(self, job_id: str, target_id: str, filename: str) -> Path:
+        if filename not in ARTIFACTS:
+            raise ValueError("Unknown artifact")
+        job = self.get(job_id)
+        if job.status != "succeeded":
+            raise RuntimeError(job.status)
+        targets = (job.result or {}).get("targets", [])
+        if target_id not in {target["target_id"] for target in targets}:
+            raise FileNotFoundError("Unknown target")
+        path = self.results / job_id / "targets" / target_id / filename
+        if not path.is_file():
+            raise FileNotFoundError(filename)
+        return path
 
     def artifact(self, job_id: str, filename: str) -> Path:
         if filename not in ARTIFACTS:
@@ -166,12 +200,48 @@ class JobManager:
 def create_app(workspace: Path | None = None) -> FastAPI:
     root = workspace or Path(os.getenv("SCA_WORKSPACE", "workspace"))
     manager = JobManager(root, int(os.getenv("SCA_WORKERS", "2")))
-    api_token = os.getenv("SCA_API_TOKEN", "")
+    api_token = secret("SCA_API_TOKEN")
     app = FastAPI(title="SCA Accuracy Improvement", version=__version__)
 
     def authorize(authorization: Annotated[str | None, Header()] = None) -> None:
         if api_token and authorization != f"Bearer {api_token}":
             raise HTTPException(status_code=401, detail="Invalid bearer token")
+
+    def authorize_remote(authorization: Annotated[str | None, Header()] = None) -> None:
+        if not api_token:
+            raise HTTPException(
+                status_code=503, detail="Configure SCA_API_TOKEN to enable remote analyses"
+            )
+        authorize(authorization)
+
+    @app.post("/v2/analyses", status_code=202)
+    def submit_remote(
+        request: RemoteAnalysisRequest, _: None = Depends(authorize_remote)
+    ) -> dict[str, str]:
+        try:
+            job = manager.submit_remote(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return {"id": job.id, "status": job.status, "status_url": f"/v2/analyses/{job.id}"}
+
+    @app.get("/v2/analyses/{job_id}")
+    def remote_status(job_id: str, _: None = Depends(authorize_remote)) -> dict[str, object]:
+        try:
+            return asdict(manager.get(job_id))
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Analysis not found") from exc
+
+    @app.get("/v2/analyses/{job_id}/targets/{target_id}/artifacts/{filename}")
+    def remote_artifact(
+        job_id: str, target_id: str, filename: str, _: None = Depends(authorize_remote)
+    ) -> FileResponse:
+        try:
+            path = manager.remote_artifact(job_id, target_id, filename)
+        except (KeyError, FileNotFoundError, ValueError) as exc:
+            raise HTTPException(status_code=404, detail="Artifact not found") from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=f"Analysis is {exc}") from exc
+        return FileResponse(path, filename=filename)
 
     @app.get("/health")
     def health() -> dict[str, str]:
