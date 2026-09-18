@@ -102,6 +102,7 @@ def test_exact_commit_and_unique_groups_required():
 
 def test_downloader_checks_json_size_and_keeps_secret_out_of_url(tmp_path, monkeypatch):
     monkeypatch.setenv("SCA_TEAMCITY_TOKEN", "teamcity-test-secret")
+    monkeypatch.setenv("SCA_CA_BUNDLE", "")
     document = b'{"bomFormat":"CycloneDX","components":[]}'
     response = MagicMock()
     response.__enter__.return_value = io.BytesIO(document)

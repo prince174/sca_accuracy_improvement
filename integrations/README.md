@@ -1,34 +1,39 @@
-# TeamCity integration
+# Вызов сервиса из build pipeline
 
-Добавьте PowerShell build step после сборки и push образа. Агент должен иметь
-Python 3.11+, `uv`, Syft 1.51.1, Docker CLI и доступ к registry. Docker login к Nexus
-выполняется штатным секретным шагом pipeline до запуска интеграции.
+Интеграция использует HTTP API v2 и не зависит от операционной системы build runner.
+Сервис разворачивается на Linux и сам получает входные данные по ссылкам.
 
-```powershell
-.\integrations\teamcity.ps1 `
-  -ProjectUuid "%env.DEPENDENCY_TRACK_PROJECT_UUID%" `
-  -Image "%env.IMAGE_REPOSITORY%:%build.number%" `
-  -Sbom "target\bom.json" `
-  -Source "." `
-  -VulnerabilityRules "security\vulnerability-rules.json" `
-  -Output "sca-accuracy-out"
-```
+После публикации артефактов и push образов вызывающая система формирует JSON:
 
-Секретные TeamCity parameters:
+- HTTPS clone URL Bitbucket;
+- полный hash исходного commit;
+- группы `targets`: имя, прямая ссылка на SBOM конкретного TeamCity build ID,
+  список относящихся к нему Docker references из Nexus;
+- необязательный `with_llm`, по умолчанию false.
 
-- `env.DEPENDENCY_TRACK_API_KEY`;
-- `env.DEEPSEEK_API_KEY`, только если передан `-WithLlm`.
+Готовое тело запроса: [remote-request.json](../examples/remote-request.json).
+Одна группа может иметь несколько образов. Разные SBOM оформляются разными группами.
+Одно задание относится к одному репозиторию и commit.
 
-Обычные environment parameters:
+## Последовательность
 
-- `env.DEPENDENCY_TRACK_URL`;
-- `env.DEPENDENCY_TRACK_PROJECT_UUID`;
-- `env.IMAGE_REPOSITORY`.
+1. `POST /v2/analyses` с Bearer token → сохранить `id`.
+2. Опрос `GET /v2/analyses/<id>` до `succeeded` или `failed`.
+3. При `failed` завершить внешний шаг ошибкой и сохранить поле `error`.
+4. При `succeeded` пройти по `result.targets`; для каждого результата скачать
+   `/v2/analyses/<id>/<sbom_artifact>`.
+5. Внешняя интеграция загружает полученные SBOM в выбранные проекты Dependency-Track.
 
-Скрипт загружает исходный SBOM, ждёт завершения обработки, экспортирует VDR,
-анализирует локальный образ, загружает enriched SBOM, снова ждёт обработки и затем
-применяет VEX. Отчёты публикуются как TeamCity artifact `sca-accuracy.zip`.
+Сервис не создаёт проекты Dependency-Track, не выбирает их UUID и не загружает туда
+BOM автоматически. Соответствие `target_id → project/version` хранит вызывающая система.
 
-Если `-DependencyTree` не передан, анализатор сам вызывает закреплённую версию
-`maven-dependency-plugin:tree` в каталоге `-Source`. Для multi-module проекта
-передавайте checkout соответствующего commit; сборщики не запускаются.
+Для TeamCity используйте прямую ссылку на содержимое артефакта:
+`https://teamcity.xxx/app/rest/builds/id:12345/artifacts/content/path/sbom.json`.
+Страница билда, redirects и подписанные URL с query-параметрами не поддерживаются.
+Для Nexus нужен Docker registry reference, например `nexus.xxx/team/app:build-12345`,
+а не ссылка на экран Browse. Предпочтительно использовать immutable digest.
+Для Bitbucket нужен HTTPS clone URL, не ссылка на страницу commit.
+
+Credentials TeamCity, Bitbucket и Nexus настраиваются на стороне сервиса.
+Их нельзя помещать в JSON задания. Контракт, curl-примеры, параметры Linux Compose
+и ограничения описаны в [README](../README.md).

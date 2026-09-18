@@ -36,16 +36,7 @@ jobs:
           python-version: "3.11"
       - run: uv sync --locked --extra dev
       - name: Build golden Maven artifacts
-        run: |
-          docker run --rm \
-            --mount "type=bind,source=$PWD/golden,target=/workspace" \
-            --mount "type=volume,source=sca-accuracy-m2,target=/root/.m2" \
-            -w /workspace/app maven:3.9.11-eclipse-temurin-21 mvn -B clean package
-          docker run --rm \
-            --mount "type=bind,source=$PWD/golden,target=/workspace" \
-            --mount "type=volume,source=sca-accuracy-m2,target=/root/.m2" \
-            -w /workspace/image-libs maven:3.9.11-eclipse-temurin-21 mvn -B clean package
-          docker build --tag sca-accuracy-golden:latest golden
+        run: uv run python golden/build.py
       - name: Install pinned Syft
         run: |
           curl -sSfL https://github.com/anchore/syft/releases/download/v1.51.1/syft_1.51.1_linux_amd64.tar.gz -o /tmp/syft.tar.gz

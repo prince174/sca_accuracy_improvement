@@ -6,3 +6,8 @@ out
 workspace
 **/__pycache__
 **/target
+results
+secrets
+certs
+docker-config
+.env

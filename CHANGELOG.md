@@ -1,3 +1,12 @@
+# Unreleased
+
+- Linux remote API v2: TeamCity artifact URLs, Nexus image groups, Bitbucket URL and exact commit.
+- Separate downloadable enriched SBOM per image; input provenance and SHA-256.
+- HTTPS allowlists, server-side credentials, certificate validation and exact Git checkout.
+- No automatic Dependency-Track upload in the remote workflow.
+- Linux deployment and complete product/process documentation; portable golden build helper.
+- Remote API tests plus real HTTPS artifact/Git integration test.
+
 # 0.4.0
 
 - Syft image/source catalogs, Package URL reconciliation, explicit coverage.

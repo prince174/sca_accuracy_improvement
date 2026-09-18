@@ -112,7 +112,7 @@ def download_sbom(url: str, destination: Path) -> str:
         headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(url, headers=headers)
     limit = int(os.getenv("SCA_MAX_SBOM_BYTES", str(64 * 1024 * 1024)))
-    context = ssl.create_default_context(cafile=os.getenv("SCA_CA_BUNDLE"))
+    context = ssl.create_default_context(cafile=os.getenv("SCA_CA_BUNDLE") or None)
     opener = urllib.request.build_opener(
         NoRedirects(), urllib.request.HTTPSHandler(context=context)
     )

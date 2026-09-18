@@ -14,19 +14,18 @@
 
 Сборка выполняется контейнерным Maven и не требует локальной установки Maven:
 
-```powershell
-.\golden\build.ps1
-
-uv run sca-accuracy `
-  --sbom golden\app\target\bom.json `
-  --dependency-tree golden\app\target\dependency-tree.json `
-  --image sca-accuracy-golden:latest `
-  --output out\golden `
-  --expectations golden\expected-statuses.json `
-  --findings golden\findings.vdr.json `
-  --vex-mode safe `
-  --vulnerability-rules golden\vulnerability-rules.json `
-  --vex-expectations golden\expected-vex-states.json
+```bash
+uv run python golden/build.py
+uv run sca-accuracy \
+  --sbom golden/app/target/bom.json \
+  --dependency-tree golden/app/target/dependency-tree.json \
+  --image sca-accuracy-golden:latest \
+  --output out/golden \
+  --expectations golden/expected-statuses.json \
+  --findings golden/findings.vdr.json \
+  --vex-mode safe \
+  --vulnerability-rules golden/vulnerability-rules.json \
+  --vex-expectations golden/expected-vex-states.json
 ```
 
 `expected-statuses.json` проверяет выбранные контрольные компоненты и завершает
@@ -34,11 +33,11 @@ uv run sca-accuracy `
 `expectation-result.json`. Остальные транзитивные зависимости остаются в отчёте.
 
 `findings.vdr.json` содержит три синтетических INTERNAL finding. Правило для
-`GOLDEN-2026-0001` указывает точную JVM-сигнатуру `StringUtils.defaultIfBlank`,
-которую вызывает приложение, поэтому статус становится `exploitable`.
-Неожиданно отсутствующий compile-компонент остаётся `in_triage`, а отсутствующая
-test dependency получает `not_affected` с `code_not_present`.
+`GOLDEN-2026-0001` указывает JVM-сигнатуру `StringUtils.defaultIfBlank`.
+Прямая ссылка на этот метод обнаруживается, но не доказывает эксплуатацию.
+Все три finding остаются `in_triage`, включая не обнаруженную test dependency.
+`expected-vex-states.json` проверяет именно эту консервативную policy.
 
-`expected-vex-states.json` превращает эти три решения в воспроизводимый gate.
-Отсутствие прямой ссылки на символ не используется для автоматического
-`not_affected`.
+В golden сборочные контейнеры Maven запускаются для создания тестовых артефактов.
+Исследуемый образ приложения во время анализа не запускается.
+Это локальная тестовая обвязка, а не обязательный шаг production-сервиса.

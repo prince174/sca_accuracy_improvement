@@ -1,0 +1,17 @@
+{
+  "repository_url": "https://bitbucket.xxx/scm/team/application.git",
+  "commit": "0123456789abcdef0123456789abcdef01234567",
+  "targets": [
+    {
+      "name": "backend",
+      "sbom_url": "https://teamcity.xxx/app/rest/builds/id:12345/artifacts/content/backend/sbom.json",
+      "images": ["nexus.xxx/team/backend:build-12345"]
+    },
+    {
+      "name": "frontend",
+      "sbom_url": "https://teamcity.xxx/app/rest/builds/id:12345/artifacts/content/frontend/sbom.json",
+      "images": ["nexus.xxx/team/frontend:build-12345", "nexus.xxx/team/frontend-debug:build-12345"]
+    }
+  ],
+  "with_llm": false
+}

@@ -2,14 +2,29 @@ services:
   sca-accuracy:
     build: .
     ports:
-      - "127.0.0.1:8080:8080"
+      - "${SCA_BIND_ADDRESS:-127.0.0.1}:${SCA_PORT:-8080}:8080"
     environment:
       SCA_API_TOKEN: ${SCA_API_TOKEN:-}
+      SCA_API_TOKEN_FILE: ${SCA_API_TOKEN_FILE:-}
       SCA_WORKERS: ${SCA_WORKERS:-2}
+      SCA_TEAMCITY_HOSTS: ${SCA_TEAMCITY_HOSTS:-}
+      SCA_BITBUCKET_HOSTS: ${SCA_BITBUCKET_HOSTS:-}
+      SCA_NEXUS_HOSTS: ${SCA_NEXUS_HOSTS:-}
+      SCA_TEAMCITY_TOKEN: ${SCA_TEAMCITY_TOKEN:-}
+      SCA_TEAMCITY_TOKEN_FILE: ${SCA_TEAMCITY_TOKEN_FILE:-}
+      SCA_BITBUCKET_TOKEN: ${SCA_BITBUCKET_TOKEN:-}
+      SCA_BITBUCKET_TOKEN_FILE: ${SCA_BITBUCKET_TOKEN_FILE:-}
+      SCA_CA_BUNDLE: ${SCA_CA_BUNDLE:-}
+      SCA_MAX_SBOM_BYTES: ${SCA_MAX_SBOM_BYTES:-67108864}
+      DOCKER_CONFIG: /run/docker-auth
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      SCA_LLM_API_KEY: ${SCA_LLM_API_KEY:-}
       SCA_LLM_BASE_URL: ${SCA_LLM_BASE_URL:-https://api.deepseek.com/v1}
       SCA_LLM_MODEL: ${SCA_LLM_MODEL:-deepseek-v4-flash}
     volumes:
       - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./secrets:/run/secrets:ro
+      - ./certs:/run/sca-certs:ro
+      - ./docker-config:/run/docker-auth:ro
     restart: unless-stopped
