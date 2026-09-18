@@ -22,7 +22,9 @@ def test_analyze_sends_structured_request_and_parses_json() -> None:
         "choices": [
             {
                 "message": {
-                    "content": json.dumps({"summary": "ok", "hypotheses": [], "warnings": []})
+                    "content": json.dumps(
+                        {"summary": "ok", "hypotheses": [], "warnings": [], "decisions": []}
+                    )
                 }
             }
         ]

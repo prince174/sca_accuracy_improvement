@@ -168,7 +168,12 @@ def reconcile(
 
 
 def enrich_sbom(
-    sbom: dict[str, Any], items: list[ReconciliationItem], image: str, digest: str
+    sbom: dict[str, Any],
+    items: list[ReconciliationItem],
+    image: str,
+    digest: str,
+    *,
+    add_observed: bool = True,
 ) -> dict[str, Any]:
     enriched = copy.deepcopy(sbom)
     enriched.setdefault("metadata", {}).setdefault("properties", []).extend(
@@ -209,6 +214,8 @@ def enrich_sbom(
         if (identity := identity_from_component(component)) is not None
     }
     for item in items:
+        if not add_observed:
+            break
         if item.status != "observed_not_declared" or item.identity.gav in declared_gavs:
             continue
         purl = item.identity.purl

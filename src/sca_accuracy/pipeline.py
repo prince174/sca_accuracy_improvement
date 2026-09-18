@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from .catalog import coverage, inspect_image, observations_from_catalog, scan
+from .decisions import apply_plan, candidates
 from .expectations import load_expectations, verify_expectations, verify_vex_expectations
 from .findings import load_findings
 from .llm import LlmConfig, analyze
@@ -61,7 +62,6 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                 "items": [item.to_dict() for item in source_items],
             },
         )
-    enriched = enrich_sbom(sbom, items, config.image, digest)
     discrepancies = [
         item.to_dict()
         for item in items
@@ -69,7 +69,9 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     ]
     findings = load_findings(config.findings) if config.findings else []
     llm_analysis = None
-    if config.with_llm and (discrepancies or findings):
+    decision_audit = None
+    corrected = sbom
+    if config.with_llm:
         llm_analysis = analyze(
             {
                 "image": config.image,
@@ -78,9 +80,17 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                 "findings": [finding.to_dict() for finding in findings],
                 "coverage": coverage(image_catalog, source_catalog),
                 "source_evidence": [item.to_dict() for item in source_items],
+                "candidates": candidates(sbom, observations),
             },
             LlmConfig.from_environment(),
         )
+        corrected, decision_audit = apply_plan(sbom, observations, llm_analysis["decisions"])
+        _write_json(config.output / "decisions.json", decision_audit)
+    corrected_items = reconcile(corrected, observations, maven_scopes)
+    enriched = enrich_sbom(
+        corrected, corrected_items, config.image, digest, add_observed=not config.with_llm
+    )
+    _write_json(config.output / "sbom.original.json", sbom)
     write_outputs(
         config.output,
         config.image,
@@ -100,6 +110,8 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         "expectations": expectation_result,
         "vex": vex_result,
         "dependency_tree": str(dependency_tree) if dependency_tree else None,
+        "decision_mode": "model_validated" if config.with_llm else "rules",
+        "changes_applied": len(decision_audit["accepted"]) if decision_audit else 0,
     }
 
 

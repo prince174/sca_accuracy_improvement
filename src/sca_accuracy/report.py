@@ -40,7 +40,10 @@ def write_outputs(
         "summary": _summary(items),
         "items": [item.to_dict() for item in items],
         "llm_analysis": llm_analysis,
-        "decision_policy": "LLM output is advisory and cannot suppress vulnerability findings.",
+        "decision_policy": "Model selects evidence-bound edits when enabled; validator applies them. Vulnerability suppression is forbidden.",
+        "decisions": json.loads((output_dir / "decisions.json").read_text(encoding="utf-8"))
+        if llm_analysis
+        else None,
     }
     _write_json(output_dir / "inventory.json", inventory)
     _write_json(output_dir / "assessment.json", assessment)

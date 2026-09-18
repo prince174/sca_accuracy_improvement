@@ -105,6 +105,16 @@ def inspect_image(
             references.setdefault(entry.identity.gav, set()).update(entry.referenced_symbols)
         for observation in observations:
             observation.referenced_symbols = sorted(references.get(observation.identity.gav, set()))
+            matches = [
+                entry
+                for entry in java
+                if entry.identity == observation.identity
+                and entry.location == observation.location
+                and entry.confidence >= 0.8
+            ]
+            hashes = {entry.sha256 for entry in matches if entry.sha256}
+            if len(hashes) == 1:
+                observation.sha256 = next(iter(hashes))
     return image_id, observations, data
 
 
