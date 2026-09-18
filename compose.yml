@@ -23,6 +23,10 @@ services:
       SCA_LLM_API_KEY: ${SCA_LLM_API_KEY:-}
       SCA_LLM_BASE_URL: ${SCA_LLM_BASE_URL:-https://api.deepseek.com/v1}
       SCA_LLM_MODEL: ${SCA_LLM_MODEL:-deepseek-v4-flash}
+      SCA_LLM_THINKING: ${SCA_LLM_THINKING:-}
+      SCA_LLM_REASONING_EFFORT: ${SCA_LLM_REASONING_EFFORT:-}
+      SCA_LLM_MAX_TOKENS: ${SCA_LLM_MAX_TOKENS:-}
+      SCA_LLM_TIMEOUT_SECONDS: ${SCA_LLM_TIMEOUT_SECONDS:-120}
     volumes:
       - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock

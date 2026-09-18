@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -27,6 +29,27 @@ class LlmConfig:
     base_url: str = "https://api.deepseek.com/v1"
     model: str = "deepseek-v4-flash"
     timeout_seconds: int = 120
+    thinking: str | None = None
+    reasoning_effort: str | None = None
+    max_tokens: int | None = None
+
+    def __post_init__(self):
+        if self.thinking not in {None, "enabled", "disabled"}:
+            raise ValueError("thinking must be enabled or disabled")
+        if self.reasoning_effort not in {None, "low", "high", "max"}:
+            raise ValueError("reasoning_effort must be low, high or max")
+        if self.max_tokens is not None and not 1 <= self.max_tokens <= 65536:
+            raise ValueError("max_tokens must be between 1 and 65536")
+
+    def public_settings(self):
+        return {
+            "requested_model": self.model,
+            "endpoint": self.base_url,
+            "thinking": self.thinking,
+            "reasoning_effort": self.reasoning_effort,
+            "max_tokens": self.max_tokens,
+            "timeout_seconds": self.timeout_seconds,
+        }
 
     @classmethod
     def from_environment(cls) -> LlmConfig:
@@ -40,6 +63,11 @@ class LlmConfig:
             base_url=base_url,
             model=os.getenv("SCA_LLM_MODEL", "deepseek-v4-flash"),
             timeout_seconds=int(os.getenv("SCA_LLM_TIMEOUT_SECONDS", "120")),
+            thinking=os.getenv("SCA_LLM_THINKING") or None,
+            reasoning_effort=os.getenv("SCA_LLM_REASONING_EFFORT") or None,
+            max_tokens=int(os.environ["SCA_LLM_MAX_TOKENS"])
+            if os.getenv("SCA_LLM_MAX_TOKENS")
+            else None,
         )
 
 
@@ -58,16 +86,26 @@ def _extract_json(content: str) -> dict[str, Any]:
     return result
 
 
-def analyze(payload: dict[str, Any], config: LlmConfig) -> dict[str, Any]:
+def analyze(
+    payload: dict[str, Any], config: LlmConfig, *, prompt: str = SYSTEM_PROMPT
+) -> dict[str, Any]:
     request_body = {
         "model": config.model,
         "temperature": 0,
         "response_format": {"type": "json_object"},
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
     }
+    if config.thinking:
+        request_body["thinking"] = {"type": config.thinking}
+    if config.reasoning_effort:
+        request_body["reasoning_effort"] = config.reasoning_effort
+    if config.max_tokens:
+        request_body["max_tokens"] = config.max_tokens
+    if config.thinking == "enabled":
+        request_body.pop("temperature")
     headers = {"Content-Type": "application/json"}
     if config.api_key:
         headers["Authorization"] = f"Bearer {config.api_key}"
@@ -77,13 +115,26 @@ def analyze(payload: dict[str, Any], config: LlmConfig) -> dict[str, Any]:
         headers=headers,
         method="POST",
     )
+    started = time.monotonic()
     try:
         with urllib.request.urlopen(request, timeout=config.timeout_seconds) as response:
             envelope = json.load(response)
     except urllib.error.HTTPError as exc:
-        detail = exc.read(2048).decode("utf-8", errors="replace")
-        raise RuntimeError(f"LLM API returned HTTP {exc.code}: {detail}") from exc
+        raise RuntimeError(f"LLM API returned HTTP {exc.code}") from None
     except urllib.error.URLError as exc:
         raise RuntimeError(f"LLM API request failed: {exc.reason}") from exc
-    content = envelope["choices"][0]["message"]["content"]
-    return _extract_json(content)
+    choice = envelope["choices"][0]
+    if choice.get("finish_reason") not in {None, "stop"}:
+        raise RuntimeError("LLM response did not finish normally")
+    result = _extract_json(choice["message"]["content"])
+    # Transport metadata is authoritative for auditing, never supplied by model text.
+    result["_transport"] = {
+        **config.public_settings(),
+        "reported_model": envelope.get("model"),
+        "system_fingerprint": envelope.get("system_fingerprint"),
+        "response_id": envelope.get("id"),
+        "usage": envelope.get("usage"),
+        "elapsed_seconds": round(time.monotonic() - started, 4),
+        "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+    }
+    return result

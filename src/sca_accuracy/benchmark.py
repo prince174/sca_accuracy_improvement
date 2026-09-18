@@ -332,6 +332,7 @@ def run(args):
     config = LlmConfig.from_environment() if args.live else None
     if config:
         context.update(model=config.model, endpoint=config.base_url, temperature=0)
+        context["llm_settings"] = config.public_settings()
     store = configured_store() if args.persist else None
     if args.persist and store is None:
         raise ValueError("--persist requires SCA_EVIDENCE_DSN")

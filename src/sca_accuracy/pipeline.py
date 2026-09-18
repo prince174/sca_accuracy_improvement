@@ -111,6 +111,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         config.output / "analysis-context.json",
         {
             "with_llm": config.with_llm,
+            "llm_transport": llm_analysis.get("_transport") if llm_analysis else None,
             "model": llm_config.model if config.with_llm else None,
             "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()
             if config.with_llm
