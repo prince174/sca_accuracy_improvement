@@ -240,6 +240,7 @@ def prepare(case):
         "discrepancies": [i.to_dict() for i in reconcile(bom, obs)],
         "source_evidence": case["source_evidence"],
         "coverage": {"absence_proven": False, "runtime_execution": False},
+        **({"artifact_evidence": case["artifact_evidence"]} if "artifact_evidence" in case else {}),
     }
     return legacy, allowed, audit, payload
 
