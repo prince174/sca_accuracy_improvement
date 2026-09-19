@@ -145,3 +145,42 @@ def test_duplicate_purls_share_score_but_duplicate_refs_are_rejected():
     bom["components"][1]["bom-ref"] = "first"
     with pytest.raises(ValueError, match="unique"):
         filter_sbom(bom, [], scores(bom))
+
+
+def test_pipeline_report_contains_scores_exclusions_and_escaped_reasons(tmp_path, monkeypatch):
+    import json
+
+    from sca_accuracy.llm import LlmConfig
+    from sca_accuracy.pipeline import AnalysisConfig, run_analysis
+
+    bom = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "components": [component("a"), component("b")],
+    }
+    path = tmp_path / "input.json"
+    path.write_text(json.dumps(bom))
+    monkeypatch.setattr(
+        "sca_accuracy.pipeline.inspect_image", lambda *a, **kw: ("image-id", [], {"artifacts": []})
+    )
+    monkeypatch.setattr(
+        "sca_accuracy.pipeline.LlmConfig.from_environment", lambda: LlmConfig("test")
+    )
+    plan = scores(bom, values={"a": 70, "b": 80})
+    plan[0]["reason"] = '<script>alert("bad")</script>'
+    monkeypatch.setattr(
+        "sca_accuracy.pipeline.assess_components",
+        lambda *a, **kw: {"summary": "scored", "assessments": plan},
+    )
+    output = tmp_path / "output"
+    run_analysis(AnalysisConfig(path, "image", output, with_llm=True))
+    assessment = json.loads((output / "assessment.json").read_text())
+    assert len(assessment["component_assessments"]) == 2
+    assert [r["included"] for r in assessment["component_assessments"]] == [False, True]
+    assert json.loads((output / "sbom.enriched.json").read_text())["components"][0]["name"] == "b"
+    html = (output / "report.html").read_text()
+    assert "70%" in html and "80%" in html
+    assert "Excluded" in html and "Included" in html
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+    assert (output / "component-scores.json").is_file()

@@ -97,19 +97,28 @@ def test_additions_are_ecosystem_neutral_and_model_can_defer(ecosystem):
     assert apply_plan(bom, obs, plan)[0] == bom
 
 
-def test_pipeline_model_plan_changes_real_output(tmp_path):
+def test_pipeline_scores_filter_actual_output(tmp_path):
     bom, obs = fixture()
     path = tmp_path / "input.json"
     path.write_text(json.dumps(bom))
     config = AnalysisConfig(path, "demo:latest", tmp_path / "result", with_llm=True)
 
     def model(payload, config):
-        assert payload["candidates"]
+        assert payload["components"]
         return {
             "summary": "correct",
             "hypotheses": [],
             "warnings": [],
-            "decisions": plan_for(bom, obs),
+            "assessments": [
+                {
+                    "component_id": c["id"],
+                    "tp_score": 95 if c["component"]["version"] == "2" else 10,
+                    "reason": "metadata and hash",
+                    "evidence_ids": [],
+                    "missing_evidence": [],
+                }
+                for c in payload["components"]
+            ],
         }
 
     with (
@@ -117,18 +126,19 @@ def test_pipeline_model_plan_changes_real_output(tmp_path):
             "sca_accuracy.pipeline.inspect_image",
             return_value=("sha256:test", obs, {"artifacts": []}),
         ),
-        patch("sca_accuracy.pipeline.analyze", side_effect=model),
+        patch("sca_accuracy.pipeline.assess_components", side_effect=model),
         patch("sca_accuracy.pipeline.LlmConfig.from_environment", return_value=LlmConfig("test")),
     ):
         result = run_analysis(config)
     output = json.loads((config.output / "sbom.enriched.json").read_text())
     assert output["components"][0]["version"] == "2"
-    assert result["changes_applied"] == 1
+    assert result["changes_applied"] == 2
+    assert result["decision_mode"] == "model_score_filter"
     assert json.loads((config.output / "sbom.original.json").read_text()) == bom
     assert json.loads((config.output / "assessment.json").read_text())["decisions"]["accepted"]
 
 
-def test_model_defer_is_not_overridden_by_automatic_enrichment(tmp_path):
+def test_missing_score_fails_instead_of_silent_filtering(tmp_path):
     bom, obs = fixture()
     path = tmp_path / "input.json"
     path.write_text(json.dumps(bom))
@@ -136,13 +146,15 @@ def test_model_defer_is_not_overridden_by_automatic_enrichment(tmp_path):
         patch(
             "sca_accuracy.pipeline.inspect_image", return_value=("digest", obs, {"artifacts": []})
         ),
-        patch("sca_accuracy.pipeline.analyze", return_value={"summary": "defer", "decisions": []}),
+        patch(
+            "sca_accuracy.pipeline.assess_components",
+            return_value={"summary": "missing", "assessments": []},
+        ),
         patch("sca_accuracy.pipeline.LlmConfig.from_environment", return_value=LlmConfig("test")),
+        pytest.raises(ValueError, match="Exactly one"),
     ):
         run_analysis(AnalysisConfig(path, "demo", tmp_path / "out", with_llm=True))
-    output = json.loads((tmp_path / "out/sbom.enriched.json").read_text())
-    assert len(output["components"]) == 1
-    assert output["components"][0]["version"] == "1"
+    assert not (tmp_path / "out/sbom.enriched.json").exists()
 
 
 def test_malformed_action_and_duplicate_are_audited():

@@ -21,6 +21,10 @@ from .remote import RemoteAnalysisRequest, run_remote, secret, validate_request
 from .version import __version__
 
 ARTIFACTS = {
+    "component-scores.json",
+    "model-request.json",
+    "model-response.json",
+    "retrieved-evidence.json",
     "analysis-context.json",
     "decisions.json",
     "sbom.original.json",

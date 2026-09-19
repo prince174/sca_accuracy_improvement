@@ -30,7 +30,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--expectations", type=Path, help="Expected GAV-to-status JSON; fail on any mismatch"
     )
     parser.add_argument(
-        "--with-llm", action="store_true", help="Ask the configured LLM to explain discrepancies"
+        "--with-llm",
+        action="store_true",
+        help="Score all components and include only TP scores > 70",
     )
     parser.add_argument(
         "--findings", type=Path, help="CycloneDX VDR/BOM containing vulnerability findings"

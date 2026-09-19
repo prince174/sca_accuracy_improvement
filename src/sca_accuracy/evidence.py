@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS evidence_labels (
 """
 
 FILES = {
+    "component-scores.json",
     "retrieved-evidence.json",
     "model-request.json",
     "model-response.json",

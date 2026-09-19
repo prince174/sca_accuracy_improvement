@@ -119,3 +119,56 @@ def test_truncated_output_cannot_be_applied():
 def test_invalid_settings_fail_before_request(kwargs):
     with pytest.raises(ValueError):
         LlmConfig("secret", **kwargs)
+
+
+def test_scoring_batches_cover_every_component_and_preserve_context(monkeypatch):
+    from sca_accuracy.llm import assess_components
+    from sca_accuracy.scoring import component_catalog
+
+    catalog = component_catalog(
+        {
+            "components": [
+                {"type": "library", "name": f"p{i}", "purl": f"pkg:npm/p{i}@1"} for i in range(5)
+            ]
+        },
+        [],
+    )
+    calls = []
+
+    def model(payload, config, **kwargs):
+        calls.append(payload)
+        assert kwargs["result_array"] == "assessments"
+        return {
+            "summary": "batch",
+            "hypotheses": [],
+            "warnings": [],
+            "assessments": [
+                {
+                    "component_id": c["id"],
+                    "tp_score": 80,
+                    "reason": "Evidence",
+                    "evidence_ids": [],
+                    "missing_evidence": [],
+                }
+                for c in payload["components"]
+            ],
+            "_transport": {"elapsed_seconds": 1},
+        }
+
+    monkeypatch.setattr("sca_accuracy.llm.analyze", model)
+    result = assess_components(
+        {"components": catalog, "digest": "immutable"}, LlmConfig("key"), batch_size=2
+    )
+    assert [len(p["components"]) for p in calls] == [2, 2, 1]
+    assert all(p["digest"] == "immutable" for p in calls)
+    assert len(result["assessments"]) == 5
+    assert result["_transport"]["elapsed_seconds"] == 3
+
+
+def test_scoring_json_contract_requires_assessments_instead_of_decisions():
+    from sca_accuracy.llm import _extract_json
+
+    body = json.dumps({"summary": "ok", "hypotheses": [], "warnings": [], "assessments": []})
+    assert _extract_json(body, "assessments")["assessments"] == []
+    with pytest.raises(TypeError, match="decisions"):
+        _extract_json(body)

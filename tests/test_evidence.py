@@ -278,14 +278,26 @@ def test_pipeline_records_retrieved_context_without_changing_validator(
 
     def model(payload, config):
         assert payload["reviewed_history"]["examples"][0]["run_id"] == run
-        return {"summary": "defer", "decisions": []}
+        return {
+            "summary": "uncertain",
+            "assessments": [
+                {
+                    "component_id": c["id"],
+                    "tp_score": 50,
+                    "reason": "Uncertain despite history",
+                    "evidence_ids": [],
+                    "missing_evidence": [],
+                }
+                for c in payload["components"]
+            ],
+        }
 
     with (
         patch(
             "sca_accuracy.pipeline.inspect_image",
             return_value=("other", [image_obs], {"artifacts": []}),
         ),
-        patch("sca_accuracy.pipeline.analyze", side_effect=model),
+        patch("sca_accuracy.pipeline.assess_components", side_effect=model),
         patch("sca_accuracy.pipeline.LlmConfig.from_environment", return_value=LlmConfig("test")),
     ):
         output = tmp_path / "result"

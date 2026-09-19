@@ -31,19 +31,25 @@ def write_outputs(
     coverage = (
         json.loads(coverage_path.read_text(encoding="utf-8")) if coverage_path.exists() else None
     )
+    decisions = (
+        json.loads((output_dir / "decisions.json").read_text(encoding="utf-8"))
+        if llm_analysis
+        else None
+    )
     assessment = {
         "coverage": coverage,
-        "schema_version": "1",
+        "schema_version": "2",
         "generated_at": generated_at,
         "image": image,
         "digest": digest,
         "summary": _summary(items),
         "items": [item.to_dict() for item in items],
         "llm_analysis": llm_analysis,
-        "decision_policy": "Model selects evidence-bound edits when enabled; validator applies them. Vulnerability suppression is forbidden.",
-        "decisions": json.loads((output_dir / "decisions.json").read_text(encoding="utf-8"))
-        if llm_analysis
-        else None,
+        "decision_policy": "Include components only when TP score > 70; scores are uncalibrated model estimates."
+        if decisions
+        else "Rules enrichment; model scoring and score filtering are disabled.",
+        "component_assessments": decisions.get("assessments", []) if decisions else [],
+        "decisions": decisions,
     }
     _write_json(output_dir / "inventory.json", inventory)
     _write_json(output_dir / "assessment.json", assessment)
@@ -98,12 +104,40 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
         f"<section><h2>LLM analysis</h2><p>{escape(llm['summary'])}</p></section>" if llm else ""
     )
     decision_section = (
-        '<section><h2>Validated model decisions</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'
+        '<section><h2>Filtering audit</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'
         + escape(json.dumps(assessment["decisions"], ensure_ascii=False, indent=2))
         + "</pre></section>"
         if assessment.get("decisions") is not None
         else ""
     )
+    score_section = ""
+    if assessment.get("decisions"):
+        score_rows = []
+        scored = assessment.get("component_assessments", [])
+        for row in scored:
+            missing = "; ".join(row["missing_evidence"]) or "None specified"
+            evidence_ids = ", ".join(row["evidence_ids"]) or "No evidence cited"
+            score_rows.append(
+                "<tr>"
+                f"<td><code>{escape(row['identity'] or row['name'])}</code></td>"
+                f"<td>{escape(str(row['tp_score']))}%</td><td>{escape(str(row['fp_score']))}%</td>"
+                f"<td>{escape(row['label'])}</td>"
+                f"<td>{'Included' if row['included'] else 'Excluded'}</td>"
+                f"<td>{escape(row['reason'])}<details><summary>Evidence and gaps</summary>"
+                f"<p>{escape(evidence_ids)}</p><p>Missing: {escape(missing)}</p></details></td></tr>"
+            )
+        included = sum(row["included"] for row in scored)
+        score_section = (
+            "<section><h2>Component scores · TP &gt; 70%</h2>"
+            f"<p>Assessed identities: {len(scored)} · Included: {included} · Excluded: {len(scored) - included}</p>"
+            "<p>Scores are uncalibrated model estimates. Exactly 70% is excluded. "
+            "TP: above 70%; FP: below 30%; otherwise uncertain. All excluded identities remain in this report. "
+            "The document subject is retained. Exclusion is not proof of absence or a VEX verdict.</p>"
+            '<div style="overflow-x:auto"><table><thead><tr><th>Component</th><th>TP score</th>'
+            "<th>FP score</th><th>Assessment</th><th>Output SBOM</th><th>Reason</th></tr></thead><tbody>"
+            + "".join(score_rows)
+            + "</tbody></table></div></section>"
+        )
     document = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -134,6 +168,7 @@ def _write_html(path: Path, assessment: dict[str, Any]) -> None:
   <h1>SCA accuracy report</h1>
   <div class="meta">Image: {escape(assessment["image"])}<br>Digest: {escape(assessment["digest"])}<br>Generated: {escape(assessment["generated_at"])}</div>
   <div class="cards">{cards}</div>
+  {score_section}
   <h2>Component reconciliation</h2>
   <table><thead><tr><th>Status</th><th>Component</th><th>Observed at</th><th>Usage</th><th>Explanation</th></tr></thead>
   <tbody>{"".join(rows)}</tbody></table>

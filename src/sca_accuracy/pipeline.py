@@ -7,15 +7,15 @@ from pathlib import Path
 from typing import Any, Literal
 
 from .catalog import coverage, inspect_image, observations_from_catalog, scan
-from .decisions import apply_plan, candidates
 from .evidence import persist_bundle
 from .expectations import load_expectations, verify_expectations, verify_vex_expectations
 from .findings import load_findings
-from .llm import SYSTEM_PROMPT, LlmConfig, analyze
+from .llm import SCORING_PROMPT, LlmConfig, assess_components, scoring_batches
 from .maven import load_dependency_tree
 from .report import write_outputs
 from .retrieval import configured_history
 from .sbom import enrich_sbom, load_sbom, reconcile
+from .scoring import component_catalog, filter_sbom
 from .vex import build_vex
 from .vulnerability_rules import load_vulnerability_rules
 
@@ -78,25 +78,26 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
     corrected = sbom
     if config.with_llm:
         llm_config = LlmConfig.from_environment()
-        offered = candidates(sbom, observations)
-        history = configured_history(offered, digest)
+        source_observations = observations_from_catalog(source_catalog) if source_catalog else []
+        catalog = component_catalog(sbom, observations, source_observations)
+        history = configured_history([c for c in catalog if c["identity"]], digest)
         if history is not None:
             _write_json(config.output / "retrieved-evidence.json", history)
-        llm_analysis = analyze(
-            {
-                "image": config.image,
-                "digest": digest,
-                "discrepancies": discrepancies,
-                "findings": [finding.to_dict() for finding in findings],
-                "coverage": coverage(image_catalog, source_catalog),
-                "source_evidence": [item.to_dict() for item in source_items],
-                "candidates": offered,
-                **({"reviewed_history": history} if history is not None else {}),
-            },
-            llm_config,
+        payload = {
+            "image": config.image,
+            "digest": digest,
+            "coverage": coverage(image_catalog, source_catalog),
+            "components": catalog,
+            **({"reviewed_history": history} if history is not None else {}),
+        }
+        _write_json(config.output / "model-request.json", {"batches": scoring_batches(payload)})
+        llm_analysis = assess_components(payload, llm_config)
+        _write_json(config.output / "model-response.json", llm_analysis)
+        corrected, decision_audit = filter_sbom(
+            sbom, observations, llm_analysis["assessments"], source_observations
         )
-        corrected, decision_audit = apply_plan(sbom, observations, llm_analysis["decisions"])
         _write_json(config.output / "decisions.json", decision_audit)
+        _write_json(config.output / "component-scores.json", decision_audit)
     corrected_items = reconcile(corrected, observations, maven_scopes)
     enriched = enrich_sbom(
         corrected, corrected_items, config.image, digest, add_observed=not config.with_llm
@@ -119,7 +120,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
             "with_llm": config.with_llm,
             "llm_transport": llm_analysis.get("_transport") if llm_analysis else None,
             "model": llm_config.model if config.with_llm else None,
-            "prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest()
+            "prompt_sha256": hashlib.sha256(SCORING_PROMPT.encode()).hexdigest()
             if config.with_llm
             else None,
             "analyzer_sha256": hashlib.sha256(
@@ -133,6 +134,7 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                         "image",
                         "llm",
                         "retrieval",
+                        "scoring",
                     )
                 )
             ).hexdigest(),
@@ -156,8 +158,11 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
         "expectations": expectation_result,
         "vex": vex_result,
         "dependency_tree": str(dependency_tree) if dependency_tree else None,
-        "decision_mode": "model_validated" if config.with_llm else "rules",
-        "changes_applied": len(decision_audit["accepted"]) if decision_audit else 0,
+        "decision_mode": "model_score_filter" if config.with_llm else "rules",
+        "changes_applied": decision_audit["changes_applied"] if decision_audit else 0,
+        "components_included": len(decision_audit["accepted"]) if decision_audit else None,
+        "components_excluded": len(decision_audit["excluded"]) if decision_audit else None,
+        "tp_threshold": 70 if config.with_llm else None,
         "evidence_id": evidence_id,
     }
 
