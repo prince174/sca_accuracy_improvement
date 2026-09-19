@@ -322,7 +322,10 @@ def filter_sbom(sbom, observations, assessments, source_observations=()):
             component["bom-ref"] = ref
             component["evidence"] = {
                 "occurrences": [
-                    {"location": e["location"]} for e in entry["evidence"] if e["origin"] == "image"
+                    {"location": location}
+                    for location in sorted(
+                        {e["location"] for e in entry["evidence"] if e["origin"] == "image"}
+                    )
                 ]
             }
             annotate(component, entry)
@@ -330,6 +333,9 @@ def filter_sbom(sbom, observations, assessments, source_observations=()):
             added_count += 1
     removed_refs = original_refs - _refs(result)
     audit["references_pruned"] = _clean_references(result, removed_refs)
+    if removed_count or added_count:
+        for composition in result.get("compositions", []):
+            composition["aggregate"] = "unknown"
     _refs(result)
     audit["removed_bom_refs"] = sorted(removed_refs)
     audit["changes_applied"] = removed_count + added_count

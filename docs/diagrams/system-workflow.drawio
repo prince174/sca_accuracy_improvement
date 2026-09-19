@@ -5,7 +5,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" value="&lt;b&gt;SCA Accuracy Improvement&lt;/b&gt;&lt;br&gt;Модель выбирает изменения — код проверяет доказательства" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="title" value="&lt;b&gt;SCA Accuracy Improvement&lt;/b&gt;&lt;br&gt;Модель оценивает компоненты — код включает TP &amp;gt;70%" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="40" y="20" width="1500" height="90" />
         </mxCell>
         <mxCell id="request" value="Pipeline → HTTP API v2&lt;br&gt;SBOM URL · image references · Bitbucket URL · commit" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
@@ -20,25 +20,25 @@
         <mxCell id="image" value="Nexus → image ID → archive&lt;br&gt;Syft + Java: metadata, пути, SHA-256" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="1070" y="285" width="420" height="95" />
         </mxCell>
-        <mxCell id="evidence" value="Сопоставление и кандидаты изменений&lt;br&gt;SBOM ↔ образ; SBOM ↔ исходники" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="evidence" value="Каталог компонентов: SBOM + образ&lt;br&gt;Исходники и coverage — контекст оценки" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="425" width="540" height="95" />
         </mxCell>
-        <mxCell id="llm" value="&lt;b&gt;Модель: apply / defer + основание&lt;/b&gt;&lt;br&gt;DeepSeek API или локальный endpoint" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="llm" value="&lt;b&gt;Модель: TP score 0–100 + основания&lt;/b&gt;&lt;br&gt;Все компоненты; порции до 40 записей" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="560" width="540" height="95" />
         </mxCell>
-        <mxCell id="validator" value="&lt;b&gt;Независимая проверка&lt;/b&gt;&lt;br&gt;ID кандидата · сильная metadata · однозначный SHA-256" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="validator" value="&lt;b&gt;Проверка полноты и контракта&lt;/b&gt;&lt;br&gt;ID · числовые баллы · ссылки evidence" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="695" width="540" height="95" />
         </mxCell>
-        <mxCell id="apply" value="Применить add / replace_identity&lt;br&gt;Повторная сверка и обогащение SBOM" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="apply" value="&lt;b&gt;Фильтр: включить TP &amp;gt;70%&lt;/b&gt;&lt;br&gt;70% исключается; очистить ссылки; сохранить оригинал" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="830" width="540" height="95" />
         </mxCell>
-        <mxCell id="output" value="sbom.enriched.json + sbom.original.json&lt;br&gt;decisions.json + assessment.json + provenance" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="output" value="sbom.enriched.json + sbom.original.json&lt;br&gt;component-scores.json + report.html + provenance" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="965" width="540" height="95" />
         </mxCell>
         <mxCell id="consumer" value="Внешний pipeline получает результат&lt;br&gt;Обновляет проект в Dependency-Track" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="500" y="1100" width="540" height="95" />
         </mxCell>
-        <mxCell id="limits" value="&lt;b&gt;Границы решений&lt;/b&gt;&lt;br&gt;&lt;br&gt;Необнаружение ≠ отсутствие.&lt;br&gt;Удаление по одному scan miss запрещено.&lt;br&gt;CVE не подавляются.&lt;br&gt;Контейнер не запускается.&lt;br&gt;&lt;br&gt;Замена по SHA-256 сейчас: Java.&lt;br&gt;Добавления: все поддержанные экосистемы." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
+        <mxCell id="limits" value="&lt;b&gt;Границы оценок&lt;/b&gt;&lt;br&gt;&lt;br&gt;Баллы модели некалиброванные.&lt;br&gt;Исключение ≠ доказанное отсутствие.&lt;br&gt;Это не решение о применимости CVE.&lt;br&gt;Целевой контейнер не запускается.&lt;br&gt;&lt;br&gt;Субъект metadata.component сохраняется.&lt;br&gt;Все оценки остаются в отчёте." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">
           <mxGeometry as="geometry" x="1090" y="560" width="400" height="350" />
         </mxCell>
         <mxCell id="mode" value="&lt;b&gt;Режимы&lt;/b&gt;&lt;br&gt;&lt;br&gt;API v2: with_llm=true по умолчанию.&lt;br&gt;false: обогащение правилами без модели.&lt;br&gt;&lt;br&gt;Ошибка модели → failed.&lt;br&gt;Без скрытого fallback." vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5FE;strokeColor=#607D8B;fontSize=20;fontFamily=Arial;spacing=12;">

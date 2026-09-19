@@ -55,6 +55,15 @@ def test_invalid_scores_fail_without_publishing(score):
         filter_sbom(bom, [], scores(bom, values={"a": score}))
 
 
+def test_filtered_inventory_no_longer_claims_original_completeness():
+    bom = {
+        "components": [component("a")],
+        "compositions": [{"aggregate": "complete"}],
+    }
+    result, _ = filter_sbom(bom, [], scores(bom, values={"a": 20}))
+    assert result["compositions"][0]["aggregate"] == "unknown"
+
+
 @pytest.mark.parametrize("invalid", ["missing", "duplicate", "invented", "extra", "evidence"])
 def test_incomplete_or_invented_assessments_are_not_silently_filtered(invalid):
     bom = {"components": [component("a"), component("b")]}
