@@ -45,6 +45,14 @@ def main():
 
     api("/ready")
     results = []
+
+    def record(row):
+        results.append(row)
+        (args.output / "acceptance.json").write_text(
+            json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(json.dumps({k: v for k, v in row.items() if k != "model_transport"}), flush=True)
+
     for family in ("java_original", "installed", "multiple"):
         with tempfile.TemporaryDirectory(prefix="sca-score-fixture-") as directory:
             expected, _ = build_fixture(Path(directory), family)
@@ -106,7 +114,16 @@ def main():
                 break
             time.sleep(1)
         if status["status"] != "succeeded":
-            raise RuntimeError(f"Score acceptance {family}: {status['status']}")
+            record(
+                {
+                    "case": family,
+                    "job_id": job["id"],
+                    "contract_passed": False,
+                    "status": status["status"],
+                    "error": status.get("error"),
+                }
+            )
+            continue
         target = args.output / family
         target.mkdir(exist_ok=True)
         artifacts = {}
@@ -162,11 +179,9 @@ def main():
             "false_negative_purls": sorted(gold - actual),
             "model_transport": json.loads(artifacts["model-response.json"])["_transport"],
         }
-        results.append(row)
-        (args.output / "acceptance.json").write_text(
-            json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        print(json.dumps({k: v for k, v in row.items() if k != "model_transport"}), flush=True)
+        record(row)
+    if any(not r["contract_passed"] for r in results):
+        raise SystemExit("Some model responses failed validation; see acceptance.json")
 
 
 if __name__ == "__main__":
