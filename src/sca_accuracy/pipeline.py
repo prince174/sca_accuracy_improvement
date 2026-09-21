@@ -135,6 +135,8 @@ def run_analysis(config: AnalysisConfig) -> dict[str, Any]:
                         "llm",
                         "retrieval",
                         "scoring",
+                        "metadata",
+                        "models",
                     )
                 )
             ).hexdigest(),

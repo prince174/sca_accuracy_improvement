@@ -54,9 +54,12 @@ class Observation:
     sha256: str | None = None
     confidence: float = 1.0
     referenced_symbols: list[str] = field(default_factory=list)
+    scanner_metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
+        if not self.scanner_metadata:
+            result.pop("scanner_metadata")
         result["gav"] = self.identity.gav
         return result
 

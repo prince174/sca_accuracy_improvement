@@ -81,7 +81,60 @@ def component_catalog(sbom, observations, source_observations=()):
             entry["evidence"].append({"id": checksum(data), **data})
     for entry in entries.values():
         entry["evidence"] = list({e["id"]: e for e in entry["evidence"]}.values())
+    _related_evidence(entries)
     return list(entries.values())
+
+
+def _related_evidence(entries):
+    """Carry relevant image facts across batching without treating co-location as exclusion."""
+    by_location, by_package = {}, {}
+    for key, entry in entries.items():
+        identity = identity_from_component(entry["component"])
+        entry_images = [e for e in entry["evidence"] if e["origin"] == "image"]
+        if identity and entry_images:
+            by_package.setdefault(identity.package_key, set()).add(key)
+        for evidence in entry_images:
+            location = evidence.get("location")
+            if location and location != "unknown":
+                by_location.setdefault(location, set()).add(key)
+    for key, entry in entries.items():
+        related = {}
+        identity = identity_from_component(entry["component"])
+        if identity:
+            for other in by_package.get(identity.package_key, set()) - {key}:
+                related.setdefault(other, set()).add("same_package_other_version")
+        for evidence in entry["evidence"]:
+            if evidence["origin"] == "image":
+                for other in by_location.get(evidence.get("location"), set()) - {key}:
+                    related.setdefault(other, set()).add("same_image_location")
+        if not related:
+            continue
+        candidates = []
+        for other in sorted(related)[:8]:
+            observed = [e for e in entries[other]["evidence"] if e["origin"] == "image"]
+            candidates.append(
+                {
+                    "identity": entries[other]["identity"],
+                    "relations": sorted(related[other]),
+                    "observations": [
+                        {
+                            "location": e["location"],
+                            "source": e["source"],
+                            "sha256": e["sha256"],
+                            "scanner_metadata": e.get("scanner_metadata", {}),
+                        }
+                        for e in observed[:2]
+                    ],
+                    "observations_truncated": len(observed) > 2,
+                }
+            )
+        data = {
+            "origin": "related_image_observations",
+            "candidates": candidates,
+            "candidates_truncated": len(related) > 8,
+            "scope": "same-image comparison; co-location and version conflict do not prove exclusion",
+        }
+        entry["evidence"].append({"id": checksum(data), **data})
 
 
 def validate_scores(catalog, assessments):

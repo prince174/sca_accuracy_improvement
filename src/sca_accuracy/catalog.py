@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .image import _run, pull_image, save_image, scan_saved_image
+from .metadata import metadata_evidence
 from .models import ComponentIdentity, Observation
 from .sbom import identity_from_component
 
@@ -81,6 +82,7 @@ def observations_from_catalog(data: dict[str, Any]) -> list[Observation]:
                     location.get("path") or "unknown",
                     "syft:" + artifact.get("foundBy", "unknown"),
                     confidence=1.0 if identity.ecosystem != "generic" and identity.version else 0.4,
+                    scanner_metadata=metadata_evidence(artifact),
                 )
             )
     return result
