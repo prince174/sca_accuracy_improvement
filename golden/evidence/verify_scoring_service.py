@@ -23,6 +23,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true", help="Authorize configured model API calls")
     parser.add_argument("--output", type=Path, default=Path("out/scoring-service-live"))
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        help="Reuse exact images and original SBOMs from a previous acceptance directory",
+    )
     args = parser.parse_args()
     if not args.live:
         parser.error("Pass --live to run the model-backed acceptance")
@@ -30,6 +35,16 @@ def main():
     url = os.getenv("SCA_SERVICE_URL", "http://127.0.0.1:18087")
     token = os.environ["SCA_API_TOKEN"]
     args.output.mkdir(parents=True, exist_ok=True)
+    if args.baseline and args.baseline.resolve() == args.output.resolve():
+        parser.error("Baseline and output directories must differ")
+    baseline = (
+        {
+            row["case"]: row
+            for row in json.loads((args.baseline / "acceptance.json").read_text(encoding="utf-8"))
+        }
+        if args.baseline
+        else {}
+    )
 
     def fetch(path, data=None):
         request = urllib.request.Request(
@@ -54,14 +69,19 @@ def main():
         print(json.dumps({k: v for k, v in row.items() if k != "model_transport"}), flush=True)
 
     for family in ("java_original", "installed", "multiple"):
-        with tempfile.TemporaryDirectory(prefix="sca-score-fixture-") as directory:
-            expected, _ = build_fixture(Path(directory), family)
-            image = f"sca-scoring-{family.replace('_', '-')}:fixture"
-            subprocess.run(
-                ["docker", "build", "--quiet", "--tag", image, directory],
-                capture_output=True,
-                check=True,
-            )
+        if args.baseline:
+            if not baseline.get(family, {}).get("contract_passed"):
+                raise ValueError(f"Baseline lacks successful case: {family}")
+            image, expected = baseline[family]["image_digest"], baseline[family]["expected_purls"]
+        else:
+            with tempfile.TemporaryDirectory(prefix="sca-score-fixture-") as directory:
+                expected, _ = build_fixture(Path(directory), family)
+                image = f"sca-scoring-{family.replace('_', '-')}:fixture"
+                subprocess.run(
+                    ["docker", "build", "--quiet", "--tag", image, directory],
+                    capture_output=True,
+                    check=True,
+                )
         # Deliberately declare a wrong version and a package not in the constructed image.
         declared = (
             ("org.slf4j", "slf4j-api", "2.0.13", "maven")
@@ -94,6 +114,10 @@ def main():
             "dependencies": [{"ref": "wrong-version", "dependsOn": ["missing-package"]}],
         }
         input_path = root / "workspace/scoring-acceptance" / family / "bom.json"
+        if args.baseline:
+            bom = json.loads(
+                (args.baseline / family / "sbom.original.json").read_text(encoding="utf-8")
+            )
         input_path.parent.mkdir(parents=True, exist_ok=True)
         input_path.write_text(json.dumps(bom), encoding="utf-8")
         job = api(
@@ -125,6 +149,8 @@ def main():
             )
             continue
         target = args.output / family
+        if args.baseline:
+            assert status["result"]["image_digest"] == baseline[family]["image_digest"]
         target.mkdir(exist_ok=True)
         artifacts = {}
         for filename in (
@@ -178,6 +204,15 @@ def main():
             "false_positive_purls": sorted(actual - gold, key=str),
             "false_negative_purls": sorted(gold - actual),
             "model_transport": json.loads(artifacts["model-response.json"])["_transport"],
+            **(
+                {
+                    "baseline_job_id": baseline[family]["job_id"],
+                    "baseline_false_positive_purls": baseline[family]["false_positive_purls"],
+                    "baseline_false_negative_purls": baseline[family]["false_negative_purls"],
+                }
+                if args.baseline
+                else {}
+            ),
         }
         record(row)
     if any(not r["contract_passed"] for r in results):
